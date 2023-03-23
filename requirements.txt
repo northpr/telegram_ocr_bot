@@ -1,0 +1,12 @@
+jupyterlab
+jupyterlab-drawio
+jupyterlab-git
+jupyterlab-pygments
+jupyterlab-spellchecker
+matplotlib
+numpy
+opencv-python==4.6.0.66
+pandas
+pytesseract==0.3.10
+scikit-learn
+seaborn
