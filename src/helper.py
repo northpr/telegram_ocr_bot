@@ -43,21 +43,21 @@ def img_preprocess(img:np):
 
     return img_erode
 
-def random_image(directory: str)->str : 
-    # Get a list of all subdirectories in the given directory
-    subdirectories = [os.path.join(directory, name) for name in os.listdir(directory) if os.path.isdir(os.path.join(directory, name))]
+def random_image(directory, subdirectory_name=None):
+    # If a subdirectory name is specified, get the path to that subdirectory
+    if subdirectory_name:
+        subdirectory_path = os.path.join(directory, subdirectory_name)
 
-    # If there are no subdirectories, return None
-    if not subdirectories:
-        return None
+        # If the specified subdirectory doesn't exist, return None
+        if not os.path.isdir(subdirectory_path):
+            return None
+    else:
+        subdirectory_path = directory
 
-    # Pick a random subdirectory
-    random_subdirectory = random.choice(subdirectories)
-
-    # Get a list of all image files in the random subdirectory and its subdirectories
+    # Get a list of all image files in the specified subdirectory and its subdirectories
     image_extensions = ['.jpg', '.jpeg', '.png', '.bmp', '.gif']
     image_files = []
-    for root, dirs, files in os.walk(random_subdirectory):
+    for root, dirs, files in os.walk(subdirectory_path):
         for file in files:
             if os.path.splitext(file)[1].lower() in image_extensions:
                 image_files.append(os.path.join(root, file))
@@ -66,10 +66,9 @@ def random_image(directory: str)->str :
     if not image_files:
         return None
 
-    # Pick a random image file and return its path
+    # Pick a random image file from the specified subdirectory and its subdirectories, and return its path
     random_image_path = random.choice(image_files)
     return random_image_path
-
 
 def img_load(bankname: str, filename: str):
     """Load image to variable
