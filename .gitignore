@@ -2,3 +2,6 @@ __pycache__/
 .ipynb_checkpoints
 .DS_Store
 .virtual_documents/
+nbs/img_test
+src/y_test.py
+src/z_test.py
