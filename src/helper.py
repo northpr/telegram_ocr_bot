@@ -67,6 +67,14 @@ def random_image(directory, subdirectory_name=None):
     random_image_path = random.choice(image_files)
     return random_image_path
 
+def remove_words(ocr_result: str)-> str:
+    remove_words = ["จ่ายบิลสําเร็จ", "วีเพย์", "VPAY","เลขที่รายการ", "ผู้รับเงินสามารถสแกนคิวอาร์โค้ด"
+                    "ธ.กสิกรไทย", "ธ.กสิกรไทย", "จํานวน:", "จำนวน:", "จำนวนเงิน", "ค่าธรรมเนียม",
+                    "สแกนตรวจสอบสลิป", "จาก", "ไปยัง", "จํานวนเงิน", "จ่ายบิลสำเร็จ", "๒ ", "๒"
+                    "รหัสอ้างอิง", "กรุงไทย", "วันเดือนปีที่ทํารายการ", "ค่าธรรมเนียม", "วันเดือนปีที่ทำรายการ"]
+    pattern = "|".join(remove_words)
+    clean_text = re.sub(pattern, "", ocr_result)
+    return clean_text
 
 def regex_check(ocr_results: str)->list:
     """For checking `ref_id` and `money_amt` from OCR results by using regular expression
@@ -77,11 +85,26 @@ def regex_check(ocr_results: str)->list:
     Returns:
         list: Will return to list after regex
     """
-    ref_id, money_amt = [], []
+    ref_id, money_amt, full_name = [], [], []
 
+    # Checking ref_id
     ref_id = [int(x) for x in re.findall(r'20\d{16}', ocr_results)]
-
+    if len(ref_id) == 0: # if nothing match
+        ref_id.append("Please check ref_id again")
+    # Checking the money amout
     money_amt = re.findall(r'\b\d{1,3}(?:,\d{3})*\.\d{2}\b', ocr_results)
     money_amt = [float(f.replace(",", "")) for f in money_amt]
+    if len(money_amt) == 0: # if nothing match
+        money_amt.append("Please check money_amt again")
 
-    return ref_id, money_amt
+    # Checking the full_name case
+    pattern_with_space = r'(นาย ?[\u0E00-\u0E7F ]+|นางสาว ?[\u0E00-\u0E7F ]+|น\.ส\. ?[\u0E00-\u0E7F ]+|นาง ?[\u0E00-\u0E7F ]+)'
+    full_name = re.findall(pattern_with_space, ocr_results)
+    if not full_name: # if full name don't have any result
+        pattern_without_space = r'(นาย[\u0E00-\u0E7F]+|นางสาว[\u0E00-\u0E7F]+|น\.ส\.[\u0E00-\u0E7F]+|นาง[\u0E00-\u0E7F]+)'
+        full_name = re.findall(pattern_without_space, ocr_results)
+
+    if len(full_name) == 0: # if nothing match
+        full_name.append("Please check full_name again")
+
+    return ref_id[0], money_amt[0], full_name[0]
