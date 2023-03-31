@@ -3,6 +3,7 @@ jupyterlab-drawio
 jupyterlab-git
 jupyterlab-pygments
 jupyterlab-spellchecker
+google-cloud-vision==3.4.1
 matplotlib
 numpy
 opencv-python==4.6.0.66
