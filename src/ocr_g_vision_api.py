@@ -1,11 +1,6 @@
 import io
 import os
 from google.cloud import vision
-from google.cloud.vision_v1 import types
-from PIL import Image
-import cv2
-import numpy as np
-import re
 from helper import *
 from datetime import datetime
 
@@ -17,14 +12,14 @@ random_img_path = random_image("img_test")
 print(random_img_path)
 
 img_path = random_img_path
-specific_img_path = "img_test/ktb/ktb_97.jpg"
+specific_img_path = "img_test/kbank/kbank_94.jpg"
 
 # Read the image file
 with io.open(img_path, 'rb') as image_file:
     content = image_file.read()
 
 # Construct an image instance
-image = types.Image(content=content)
+image = vision.Image(content=content)
 
 # Performs OCR on the image file
 response = client.text_detection(image=image)
