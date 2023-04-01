@@ -7,14 +7,14 @@ from google.cloud import vision
 import pytesseract
 from datetime import datetime
 
+# TODO: Change to config.ini
 bot = telebot.TeleBot("6129188503:AAH3M2mg3m-H-RnXQPvToLkK6uS9uyYD2RM")
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'g_credential.json' # Getting JSON file from Google Cloud
 client = vision.ImageAnnotatorClient()
 
-welcome_msg = """Hi from OCRbot, here's the command you could use
-/reader - starting to use OCR bot
-/report - to report a problem
+welcome_msg = """Hi from OCR-HelperBot, here's the command you could use
+/reader - starting to use OCRBot
 /tutorial - for reading how to use this bot"""
 
 # Define the handler function for the "/start" command
@@ -22,17 +22,15 @@ welcome_msg = """Hi from OCRbot, here's the command you could use
 def send_welcome(message):
     bot.reply_to(message, welcome_msg)
 
+#TODO: Could activate and deactivate OCR bot by using command such as /deactivate
 @bot.message_handler(commands=["reader"])
-def handle_ocr_image(message):
+def handle(message):
     # Reply text to users
     bot.reply_to(message, "Send me an image to read")
     bot.register_next_step_handler(message, handle_image)
 
 # Define the handler function for images
 def handle_image(message):
-    # Check that it is message
-    if not message.photo:
-        bot.reply_to(message, "It's not image, Please send again")
     # Download the image
     file_info = bot.get_file(message.photo[-1].file_id)
     image_file = bot.download_file(file_info.file_path)
@@ -43,8 +41,8 @@ def handle_image(message):
             content = image_binary.read()
 
         # Construct an image instance
+        bot.reply_to(message, "Start OCR the image")
         image = vision.Image(content=content)
-
         # Performs OCR on the image file
         response = client.text_detection(image=image)
         texts = response.text_annotations
@@ -68,4 +66,5 @@ def handle_image(message):
         bot.reply_to(message, f"Error performing OCR: {str(e)}")
 
 # Run the bot
+print("Running the bot")
 bot.polling()
