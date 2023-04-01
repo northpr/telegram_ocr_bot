@@ -40,36 +40,26 @@ def img_preprocess(img:np):
 
     return img_erode
 
-def random_image(directory, subdirectory_name=None):
-    # If a subdirectory name is specified, get the path to that subdirectory
-    if subdirectory_name:
-        subdirectory_path = os.path.join(directory, subdirectory_name)
 
-        # If the specified subdirectory doesn't exist, return None
-        if not os.path.isdir(subdirectory_path):
-            return None
-    else:
-        subdirectory_path = directory
-
-    # Get a list of all image files in the specified subdirectory and its subdirectories
-    image_extensions = ['.jpg', '.jpeg', '.png', '.bmp', '.gif']
+def random_image(directory):
+    # Search for all .jpg files in the specified directory and its subdirectories
     image_files = []
-    for root, dirs, files in os.walk(subdirectory_path):
+    for root, dirs, files in os.walk(directory):
         for file in files:
-            if os.path.splitext(file)[1].lower() in image_extensions:
+            if file.lower().endswith('.jpg'):
                 image_files.append(os.path.join(root, file))
 
     # If there are no image files, return None
     if not image_files:
         return None
 
-    # Pick a random image file from the specified subdirectory and its subdirectories, and return its path
+    # Pick a random image file from the list of image files found, and return its path
     random_image_path = random.choice(image_files)
     return random_image_path
 
 def remove_words(ocr_result: str)-> str:
     remove_words = ["จ่ายบิลสําเร็จ", "วีเพย์", "VPAY","เลขที่รายการ", "ผู้รับเงินสามารถสแกนคิวอาร์โค้ด"
-                    "ธ.กสิกรไทย", "ธ.กสิกรไทย", "จํานวน:", "จำนวน:", "จำนวนเงิน", "ค่าธรรมเนียม",
+                    "ธ.กสิกรไทย", "ธ.กสิกรไทย", "จํานวน:", "จำนวน:", "จำนวนเงิน", "ค่าธรรมเนียม:",
                     "สแกนตรวจสอบสลิป", "จาก", "ไปยัง", "จํานวนเงิน", "จ่ายบิลสำเร็จ", "๒ ", "๒"
                     "รหัสอ้างอิง", "กรุงไทย", "วันเดือนปีที่ทํารายการ", "ค่าธรรมเนียม", "วันเดือนปีที่ทำรายการ"]
     pattern = "|".join(remove_words)
