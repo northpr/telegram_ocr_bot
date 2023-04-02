@@ -8,17 +8,14 @@ Please read how to install
     
     ```conda activate <env-name>```
 
-3. Real the tutorial
-
-    ```make tutorial```
-
-4. Install requirements
+3. Install requirements
 
     ```make install```
 
-5. Remove this repo on your develop directory
+4. Remove this repo on your develop directory
 
     ```rm -rf .git```
 
 ## How to
 nbs = notebooks
+src = source codes

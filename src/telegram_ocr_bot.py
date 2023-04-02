@@ -7,6 +7,8 @@ from google.cloud import vision
 import pytesseract
 from datetime import datetime
 
+# TODO: More error handling
+
 # TODO: Change to config.ini
 bot = telebot.TeleBot("6129188503:AAH3M2mg3m-H-RnXQPvToLkK6uS9uyYD2RM")
 
@@ -26,7 +28,7 @@ def send_welcome(message):
 @bot.message_handler(commands=["reader"])
 def handle(message):
     # Reply text to users
-    bot.reply_to(message, "Send me an image to read")
+    bot.reply_to(message, "[BOT] Send me an image to read")
     bot.register_next_step_handler(message, handle_image)
 
 # Define the handler function for images
@@ -41,7 +43,7 @@ def handle_image(message):
             content = image_binary.read()
 
         # Construct an image instance
-        bot.reply_to(message, "Start OCR the image")
+        bot.reply_to(message, "[PROCESSING] Start OCR the image. . .")
         image = vision.Image(content=content)
         # Performs OCR on the image file
         response = client.text_detection(image=image)
@@ -53,18 +55,21 @@ def handle_image(message):
 
         # Extract the reference ID and currency values from the text
         ref_id, money_amt, full_name = regex_check(clean_text)
-
-        # Checking number of list of ref_id and money_amt
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-            
         # Print the extracted numbers
-        response = f"Reference ID: {ref_id}\nMoney Amount: {money_amt}\nSender Name: {full_name}\n\nCurrent time: {current_time}"
+        result_msg = f"[RESULT]\n\nReference ID: {ref_id}\nMoney Amount: {money_amt}\nSender Name: {full_name}\nCurrent time: {current_time}"
+        print(result_msg)
+        print("============\n")
         # Send the message back to the user
-        bot.reply_to(message, response)
+        bot.reply_to(message, result_msg)
     except Exception as e:
-        bot.reply_to(message, f"Error performing OCR: {str(e)}")
+        # Error message
+        error_msg = f"Error performing OCR: {str(e)}"
+        bot.reply_to(message, error_msg)
+        print(error_msg)
 
 # Run the bot
-print("Running the bot")
+print("Start running the bot")
+print("===========\n")
 bot.polling()
