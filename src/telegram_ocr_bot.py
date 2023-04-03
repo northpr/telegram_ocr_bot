@@ -33,17 +33,17 @@ def handle(message):
 
 # Define the handler function for images
 def handle_image(message):
-    # Download the image
-    file_info = bot.get_file(message.photo[-1].file_id)
-    image_file = bot.download_file(file_info.file_path)
-
     try:
+        # Download the image
+        file_info = bot.get_file(message.photo[-1].file_id)
+        image_file = bot.download_file(file_info.file_path)
+        bot.reply_to(message, "[BOT] Receiving an image")
+        
         # Read the image file
         with io.BytesIO(image_file) as image_binary:
             content = image_binary.read()
-
+        
         # Construct an image instance
-        bot.reply_to(message, "[PROCESSING] Start OCR the image. . .")
         image = vision.Image(content=content)
         # Performs OCR on the image file
         response = client.text_detection(image=image)
