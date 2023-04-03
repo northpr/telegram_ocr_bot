@@ -76,16 +76,19 @@ def regex_check(ocr_results: str)->list:
         list: Will return to list after regex
     """
     ref_id, money_amt, full_name = [], [], []
+    mistakes = 0
 
     # Checking ref_id
     ref_id = [int(x) for x in re.findall(r'20\d{16}', ocr_results)]
     if len(ref_id) == 0: # if nothing match
-        ref_id.append("Please check ref_id again")
+        ref_id.append("Please manually check ref_id again")
+        mistakes += 1
     # Checking the money amout
     money_amt = re.findall(r'\b\d{1,3}(?:,\d{3})*\.\d{2}\b', ocr_results)
     money_amt = [float(f.replace(",", "")) for f in money_amt]
     if len(money_amt) == 0: # if nothing match
-        money_amt.append("Please check money_amt again")
+        money_amt.append("Please manually check money_amt again")
+        mistakes += 1
 
     # Checking the full_name case
     pattern_with_space = r'(นาย ?[\u0E00-\u0E7F ]+|นางสาว ?[\u0E00-\u0E7F ]+|น\.ส\. ?[\u0E00-\u0E7F ]+|นาง ?[\u0E00-\u0E7F ]+)'
@@ -95,6 +98,7 @@ def regex_check(ocr_results: str)->list:
         full_name = re.findall(pattern_without_space, ocr_results)
 
     if len(full_name) == 0: # if nothing match
-        full_name.append("Please check full_name again")
+        full_name.append("Please manually check full_name again")
+        mistakes += 1
 
-    return ref_id[0], money_amt[0], full_name[0]
+    return ref_id[0], money_amt[0], full_name[0], mistakes
