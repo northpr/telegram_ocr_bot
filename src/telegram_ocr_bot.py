@@ -33,7 +33,7 @@ def handle(message):
 
 # Define the handler function for images
 def handle_image(message):
-    try:
+    try: # Need to be here to focus only image file
         # Download the image
         file_info = bot.get_file(message.photo[-1].file_id)
         image_file = bot.download_file(file_info.file_path)
