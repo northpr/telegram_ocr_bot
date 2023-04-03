@@ -1,15 +1,10 @@
 import telebot
 import os
 from helper import *
-import cv2
 import io
 from google.cloud import vision
-import pytesseract
 from datetime import datetime
 
-# TODO: More error handling
-
-# TODO: Change to config.ini
 bot = telebot.TeleBot("6129188503:AAH3M2mg3m-H-RnXQPvToLkK6uS9uyYD2RM")
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'g_credential.json' # Getting JSON file from Google Cloud
@@ -17,32 +12,61 @@ client = vision.ImageAnnotatorClient()
 
 welcome_msg = """Hi from OCR-HelperBot, here's the command you could use
 /activate - activate OCR-Bot
-/tutorial - deactivate OCR-Bot"""
+/deactivate - deactivate OCR-Bot"""
 
 ocr_activated = False
+authorized_chat_ids = []
+password = "password123"
 
-# Define the handler function for the "/start" command
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     bot.reply_to(message, welcome_msg)
 
-#TODO: Could activate and deactivate OCR bot by using command such as /deactivate
 @bot.message_handler(commands=["activate"])
 def handle_activate(message):
     global ocr_activated
+    if not is_authorized(message):
+        return
     ocr_activated = True
     bot.reply_to(message, "OCRBot is now activated")
 
 @bot.message_handler(commands=["deactivate"])
 def handle_deactivate(message):
     global ocr_activated
+    if not is_authorized(message):
+        return
     ocr_activated = False
     bot.reply_to(message, "OCR-Bot is now deactivated")
 
-# Define the handler function for images
+@bot.message_handler(commands=["login"])
+def handle_login(message):
+    global authorized_chat_ids
+    chat_id = message.chat.id
+    if chat_id in authorized_chat_ids:
+        bot.reply_to(message, "You're already logged in.")
+    else:
+        bot.reply_to(message, "Please enter password to login.")
+        bot.register_next_step_handler(message, verify_password)
+
+def verify_password(message):
+    global authorized_chat_ids
+    if message.text == password:
+        authorized_chat_ids.append(message.chat.id)
+        bot.reply_to(message, "Password is correct. You're now logged in.")
+    else:
+        bot.reply_to(message, "Password is incorrect. Please try again.")
+
+def is_authorized(message):
+    if message.chat.id not in authorized_chat_ids:
+        bot.reply_to(message, "You are not authorized to use this bot.")
+        return False
+    return True
+
 @bot.message_handler(content_types=["photo"])
 def handle_image(message):
     global ocr_activated
+    if not is_authorized(message):
+        return
     if ocr_activated:
         try: # Need to be here to focus only image file
             # Download the image
@@ -53,9 +77,8 @@ def handle_image(message):
             # Read the image file
             with io.BytesIO(image_file) as image_binary:
                 content = image_binary.read()
-            
-            # Construct an image instance
             image = vision.Image(content=content)
+
             # Performs OCR on the image file
             response = client.text_detection(image=image)
             texts = response.text_annotations
