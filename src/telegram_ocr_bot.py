@@ -11,8 +11,8 @@ os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'g_credential.json' # Getting JSO
 client = vision.ImageAnnotatorClient()
 
 welcome_msg = """Hi from OCR-HelperBot, here's the command you could use
-/activate - activate OCR-Bot
-/deactivate - deactivate OCR-Bot"""
+/activate - เริ่มการใช้บอท
+/deactivate - ปิดการใช้บอท"""
 
 ocr_activated = False
 authorized_chat_ids = []
@@ -28,7 +28,7 @@ def handle_activate(message):
     if not is_authorized(message):
         return
     ocr_activated = True
-    bot.reply_to(message, "OCRBot is now activated")
+    bot.reply_to(message, "[BOT] OCR - Bot is now activated")
 
 @bot.message_handler(commands=["deactivate"])
 def handle_deactivate(message):
@@ -36,29 +36,29 @@ def handle_deactivate(message):
     if not is_authorized(message):
         return
     ocr_activated = False
-    bot.reply_to(message, "OCR-Bot is now deactivated")
+    bot.reply_to(message, "[BOT] OCR-Bot is now deactivated")
 
 @bot.message_handler(commands=["login"])
 def handle_login(message):
     global authorized_chat_ids
     chat_id = message.chat.id
     if chat_id in authorized_chat_ids:
-        bot.reply_to(message, "You're already logged in.")
+        bot.reply_to(message, "[BOT] You're already logged in.")
     else:
-        bot.reply_to(message, "Please enter password to login.")
+        bot.reply_to(message, "[BOT] Please enter password to login.")
         bot.register_next_step_handler(message, verify_password)
 
 def verify_password(message):
     global authorized_chat_ids
     if message.text == password:
         authorized_chat_ids.append(message.chat.id)
-        bot.reply_to(message, "Password is correct. You're now logged in.")
+        bot.reply_to(message, "[BOT] You're now logged in.")
     else:
-        bot.reply_to(message, "Password is incorrect. Please try again.")
+        bot.reply_to(message, "[BOT] Incorrect, Please try again.")
 
 def is_authorized(message):
     if message.chat.id not in authorized_chat_ids:
-        bot.reply_to(message, "You are not authorized to use this bot.")
+        bot.reply_to(message, "[BOT] You are not authorized to use this bot.")
         return False
     return True
 
@@ -92,16 +92,16 @@ def handle_image(message):
             current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             if mistakes >= 2:
-                result_msg = "Please check that it's real receipt"
+                result_msg = "[BOT] Please try again or not a receipt"
             else:
-                result_msg = f"[RESULT]\n\nReference ID: {ref_id}\nMoney Amount: {money_amt}\nSender Name: {full_name}\nCurrent time: {current_time}"
+                result_msg = f"[BOT]\n\nReference ID: {ref_id}\nMoney Amount: {money_amt}\nSender Name: {full_name}\nCurrent time: {current_time}"
             print(result_msg)
             print("============\n")
             # Send the message back to the user
             bot.reply_to(message, result_msg)
         except Exception as e:
             # Error message
-            error_msg = f"Error performing OCR: {str(e)}"
+            error_msg = f"[BOT ERROR] Error performing OCR: {str(e)}"
             bot.reply_to(message, error_msg)
             print(error_msg)
 
