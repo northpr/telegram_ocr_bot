@@ -10,7 +10,7 @@ bot = telebot.TeleBot("6129188503:AAH3M2mg3m-H-RnXQPvToLkK6uS9uyYD2RM")
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'g_credential.json' # Getting JSON file from Google Cloud
 client = vision.ImageAnnotatorClient()
 
-welcome_msg = """Hi from OCR-HelperBot, here's the command you could use
+welcome_msg = """ยินดีต้อนรับ เริ่มการใช้ OCR-Bot
 /activate - เริ่มการใช้บอท
 /deactivate - ปิดการใช้บอท"""
 
@@ -28,7 +28,7 @@ def handle_activate(message):
     if not is_authorized(message):
         return
     ocr_activated = True
-    bot.reply_to(message, "[BOT] OCR - Bot is now activated")
+    bot.reply_to(message, "[BOT] OCR-Bot is now activated")
 
 @bot.message_handler(commands=["deactivate"])
 def handle_deactivate(message):
@@ -88,13 +88,16 @@ def handle_image(message):
             clean_text = remove_words(text)
 
             # Extract the reference ID and currency values from the text
-            ref_id, money_amt, full_name, mistakes = regex_check(clean_text)
-            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            regex_result = regex_check(clean_text)
 
-            if mistakes >= 2:
+            if regex_result['mistakes'] >= 2:
                 result_msg = "[BOT] Please try again or not a receipt"
             else:
-                result_msg = f"[BOT]\n\nReference ID: {ref_id}\nMoney Amount: {money_amt}\nSender Name: {full_name}\nCurrent time: {current_time}"
+                result_msg = f"[BOT]\n\nReference ID: {regex_result['ref_id']}\
+                    \nMoney Amount: {regex_result['money_amt']}\
+                    \nSender Name: {regex_result['full_name']}\
+                    \nCurrent time: {regex_result['current_time']}"
+                
             print(result_msg)
             print("============\n")
             # Send the message back to the user
