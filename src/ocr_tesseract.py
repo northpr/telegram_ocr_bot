@@ -1,3 +1,5 @@
+# Not using Pytesseract anymore because it doesn't support Thai language and hard to ocr.
+
 import cv2
 import pytesseract
 from helper import *
