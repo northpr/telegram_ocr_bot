@@ -1,9 +1,9 @@
 import telebot
 import os
+import csv
 from helper import *
 import io
 from google.cloud import vision
-from datetime import datetime
 
 bot = telebot.TeleBot("6129188503:AAH3M2mg3m-H-RnXQPvToLkK6uS9uyYD2RM")
 
@@ -15,12 +15,30 @@ welcome_msg = """ยินดีต้อนรับ เริ่มการ�
 /deactivate - ปิดการใช้บอท"""
 
 ocr_activated = False
-authorized_chat_ids = []
-password = "password123"
+authorized_user_ids = []
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     bot.reply_to(message, welcome_msg)
+
+@bot.message_handler(commands=["register"])
+def handle_register(message):
+    if message.chat.type == "private":
+        bot.reply_to(message, "[BOT] ใส่รหัสผ่านสำหรับการลงทะเบียนใช้บอท")
+        bot.register_next_step_handler(message, save_registration)
+    else:
+        bot.reply_to(message, "[BOT] การสมัครสามารถทำได้ในแชทส่วนตัวกับบอทเท่านั้น")
+
+def save_registration(message):
+    user_id = message.from_user.id
+    password = message.text
+    user_list = [str(user_id), password]
+
+    with open("user_passwords.csv", "a", newline="") as csv_file:
+        writer_object = csv.writer(csv_file)
+        writer_object.writerow(user_list)
+    
+    bot.reply_to(message, "[BOT] การลงทะเบียนเสร็จสมบูรณ์. คุณสามารถล็อกอินโดยการพิมพ์ /login")
 
 @bot.message_handler(commands=["activate"])
 def handle_activate(message):
@@ -28,7 +46,7 @@ def handle_activate(message):
     if not is_authorized(message):
         return
     ocr_activated = True
-    bot.reply_to(message, "[BOT] OCR-Bot is now activated")
+    bot.reply_to(message, "[BOT] เริ่มการใช้งาน OCR-Bot")
 
 @bot.message_handler(commands=["deactivate"])
 def handle_deactivate(message):
@@ -36,29 +54,41 @@ def handle_deactivate(message):
     if not is_authorized(message):
         return
     ocr_activated = False
-    bot.reply_to(message, "[BOT] OCR-Bot is now deactivated")
+    bot.reply_to(message, "[BOT] ปิดการใช้งาน OCR-Bot")
 
 @bot.message_handler(commands=["login"])
 def handle_login(message):
-    global authorized_chat_ids
+    global authorized_user_ids
     chat_id = message.chat.id
-    if chat_id in authorized_chat_ids:
-        bot.reply_to(message, "[BOT] You're already logged in.")
+    if chat_id in authorized_user_ids:
+        bot.reply_to(message, "[BOT] คุณได้ล็อกอินอยู่แล้ว")
     else:
-        bot.reply_to(message, "[BOT] Please enter password to login.")
+        bot.reply_to(message, "[BOT] โปรดใส่รหัสผ่านเพื่อล็อกอิน")
         bot.register_next_step_handler(message, verify_password)
 
+
 def verify_password(message):
-    global authorized_chat_ids
-    if message.text == password:
-        authorized_chat_ids.append(message.chat.id)
-        bot.reply_to(message, "[BOT] You're now logged in.")
-    else:
-        bot.reply_to(message, "[BOT] Incorrect, Please try again.")
+    global authorized_user_ids
+    user_id = message.from_user.id
+    password = message.text
+
+    with open("user_passwords.csv", "r") as csv_file:
+        reader = csv.reader(csv_file)
+        for row in reader:
+            if str(user_id) == row[0] and password == row[1]:
+                authorized_user_ids.append(user_id)
+                bot.reply_to(message, "ล็อกอินสำเร็จ")
+                return
+            
+    bot.reply_to(message, "[BOT] รหัสผ่านผิด โปรดลองอีกครั้ง")
 
 def is_authorized(message):
-    if message.chat.id not in authorized_chat_ids:
-        bot.reply_to(message, "[BOT] You are not authorized to use this bot.")
+    user_id = message.from_user.id
+    if message.chat.type == "private" and user_id not in authorized_user_ids:
+        bot.reply_to(message, "[BOT] คุณไม่มีสิทธิ์จะใช้งานบอทนี้ได้")
+        return False
+    elif message.chat.type == "group" and not ocr_activated:
+        bot.reply_to(message, "[BOT] OCR-Bot is not activated in this group")
         return False
     return True
 
@@ -72,7 +102,7 @@ def handle_image(message):
             # Download the image
             file_info = bot.get_file(message.photo[-1].file_id)
             image_file = bot.download_file(file_info.file_path)
-            bot.reply_to(message, "[BOT] Receiving an image")
+            bot.reply_to(message, "[BOT] ได้รับรูปภาพ")
             
             # Read the image file
             with io.BytesIO(image_file) as image_binary:
@@ -91,7 +121,7 @@ def handle_image(message):
             regex_result = regex_check(clean_text)
 
             if regex_result['mistakes'] >= 2:
-                result_msg = "[BOT] Please try again or not a receipt"
+                result_msg = "[BOT] โปรดลองอีกครั้ง หรือตรวจว่าเป็นใบเสร็จ"
             else:
                 result_msg = f"[BOT]\n\nReference ID: {regex_result['ref_id']}\
                     \nMoney Amount: {regex_result['money_amt']}\
