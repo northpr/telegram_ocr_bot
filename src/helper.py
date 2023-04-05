@@ -3,6 +3,7 @@ import cv2
 import os
 import re
 import random
+from datetime import datetime
 
 def img_preprocess(img:np): 
     """Preprocess image to make letters clearer while removing background
@@ -101,4 +102,10 @@ def regex_check(ocr_results: str)->list:
         full_name.append("Please manually check full_name again")
         mistakes += 1
 
-    return ref_id[0], money_amt[0], full_name[0], mistakes
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    return {"ref_id": ref_id[0],
+            "money_amt": money_amt[0],
+            "full_name": full_name[0],
+            "mistakes": mistakes,
+            "current_time": current_time}
