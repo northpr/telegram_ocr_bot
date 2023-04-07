@@ -6,3 +6,4 @@ nbs/img_test
 src/y_test.py
 src/z_test.py
 src/g_credential.json
+src/config.py

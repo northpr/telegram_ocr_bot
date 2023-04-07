@@ -1,13 +1,14 @@
 import telebot
 import os
 import csv
-from helper import *
+from helper import remove_words, regex_check
 import io
 from google.cloud import vision
+from config import *
 
-bot = telebot.TeleBot("6129188503:AAH3M2mg3m-H-RnXQPvToLkK6uS9uyYD2RM")
+bot = telebot.TeleBot(TELEBOT_TOKEN)
 
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'g_credential.json' # Getting JSON file from Google Cloud
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = GOOGLE_APPLICATION_CREDENTIALS # Getting JSON file from Google Cloud
 client = vision.ImageAnnotatorClient()
 
 welcome_msg = """ยินดีต้อนรับ เริ่มการใช้ OCR-Bot
