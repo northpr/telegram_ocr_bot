@@ -60,7 +60,6 @@ class OCRBot:
         1. It will check that the user is already registered or not
         2. If not it needs users (support staff) to fill in the user_id and the function will proceed
         3. Next to get_staff_id_and_password() function
-
         """
         if message.chat.type == "private":
             user_id = message.from_user.id
@@ -131,16 +130,13 @@ class OCRBot:
                     self.bot.reply_to(message, "ล็อกอินสำเร็จ")
                     return
                 
-        self.bot.reply_to(message, "[BOT] รหัสผ่านผิด โปรดลองอีกครั้ง")
+        self.bot.reply_to(message, "[BOT] รหัสผ่านผิด โปรดลองอีกครั้ง หรือกด /login")
 
     #TODO: Fixing bot activation even not a user still could login
     def is_authorized(self, message):
         user_id = message.from_user.id
-        if message.chat.type == "private" and user_id not in self.authorized_user_ids:
-            self.bot.reply_to(message, "[BOT] คุณไม่มีสิทธิ์จะใช้งานบอทนี้ได้")
-            return False
-        elif message.chat.type == "group" and not self.ocr_activated:
-            self.bot.reply_to(message, "[BOT] OCR-Bot is not activated in this group")
+        if user_id not in self.authorized_user_ids:
+            self.bot.reply_to(message, "[BOT] คุณไม่มีสิทธิ์จะใช้บอท")
             return False
         return True
     
@@ -152,8 +148,6 @@ class OCRBot:
         Args:
             message (telebot messages): The message from user that is the image.
         """
-        if not self.is_authorized(message):
-            return
         if self.ocr_activated:
             try:
                 # Download the image
