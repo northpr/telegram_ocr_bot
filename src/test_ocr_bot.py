@@ -1,3 +1,5 @@
+# This is only test space
+
 import telebot
 import os
 import csv
@@ -38,7 +40,6 @@ def save_registration(message):
     with open("user_passwords.csv", "a", newline="") as csv_file:
         writer_object = csv.writer(csv_file)
         writer_object.writerow(user_list)
-    
     bot.reply_to(message, "[BOT] การลงทะเบียนเสร็จสมบูรณ์. คุณสามารถล็อกอินโดยการพิมพ์ /login")
 
 @bot.message_handler(commands=["activate"])
@@ -80,7 +81,6 @@ def verify_password(message):
                 authorized_user_ids.append(user_id)
                 bot.reply_to(message, "ล็อกอินสำเร็จ")
                 return
-            
     bot.reply_to(message, "[BOT] รหัสผ่านผิด โปรดลองอีกครั้ง")
 
 def is_authorized(message):
