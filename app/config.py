@@ -1,0 +1,4 @@
+# All secrets
+TELEBOT_TOKEN = "6129188503:AAH3M2mg3m-H-RnXQPvToLkK6uS9uyYD2RM"
+GOOGLE_APPLICATION_CREDENTIALS = 'g_credential.json'
+USER_PASSWORDS_FILE = "user_passwords.csv"

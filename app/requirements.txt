@@ -1,0 +1,2 @@
+google-cloud-vision==3.4.1
+telebot==0.0.5
