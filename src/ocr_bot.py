@@ -3,7 +3,7 @@ import io
 import csv
 import os
 from google.cloud import vision
-from helper import remove_words, regex_check
+from helper import remove_words, regex_check, perform_ocr
 from config import *
 import datetime
 
@@ -50,10 +50,18 @@ class OCRBot:
     def send_welcome(self, message):
         welcome_msg = """ยินดีต้อนรับ เริ่มการใช้ OCR-Bot
 /activate - เริ่มการใช้บอท
-/deactivate - ปิดการใช้บอท"""
+/deactivate - ปิดการใช้บอท
+/login - สำหรับการเข้าสู่ระบบ"""
         self.bot.reply_to(message, welcome_msg)
 
     def handle_register(self, message):
+        """
+        Handling register when users type /register.
+        1. It will check that the user is already registered or not
+        2. If not it needs users (support staff) to fill in the user_id and the function will proceed
+        3. Next to get_staff_id_and_password() function
+
+        """
         if message.chat.type == "private":
             user_id = message.from_user.id
 
@@ -65,21 +73,31 @@ class OCRBot:
                         self.bot.reply_to(message, "[BOT] คุณได้ทำการลงทะเบียนแล้ว")
                         return
                     
-            self.bot.reply_to(message, "[BOT] ใส่รหัสผ่านสำหรับการลงทะเบียนใช้บอท")
-            self.bot.register_next_step_handler(message, self.save_registration)
+            self.bot.reply_to(message, "[BOT] โปรดใส่รหัสพนักงานสำหรับการลงทะเบียน (ตัวอย่าง: SNO-0001)")
+            # lambda m: self.get_staff_id_and_password(m) Receive next message 
+            # and calls the get_staff_id_and_password() function
+            self.bot.register_next_step_handler(message, lambda m: self.get_staff_id_and_password(m))
         else:
             self.bot.reply_to(message, "[BOT] การสมัครสามารถทำได้ในแชทส่วนตัวกับบอทเท่านั้น")
 
-    def save_registration(self, message):
+    def get_staff_id_and_password(self, message):
+        staff_id = message.text
+        self.bot.reply_to(message, "[BOT] ใส่รหัสผ่านสำหรับการลงทะเบียนใช้บอท")
+        # lambda m: self.save_registration(m, staff_id) Receive next message 
+        # and calls the `save_registration() method with this message and the previously obtained `staff_id`
+        self.bot.register_next_step_handler(message, lambda m: self.save_registration(m, staff_id))
+
+    def save_registration(self, message, staff_id):
         user_id = message.from_user.id
         password = message.text
         register_date = datetime.datetime.now().strftime("%d-%m-%Y")
-        user_list = [str(user_id), password, register_date]
+        user_list = [str(user_id), staff_id, password, register_date]
 
         with open("user_passwords.csv", "a", newline="") as csv_file:
             writer_object = csv.writer(csv_file)
             writer_object.writerow(user_list)
-        self.bot.reply_to(message, "[BOT] การลงทะเบียนเสร็จสมบูรณ์ คุณสามารถล็อกอินโดยการพิมพ์ /login")
+        response_msg = f"[BOT] {staff_id}\nการลงทะเบียนเสร็จสมบูรณ์ คุณสามารถล็อกอินโดยการพิมพ์ /login"
+        self.bot.reply_to(message, response_msg)
 
     def handle_activate(self, message):
         if not self.is_authorized(message):
@@ -108,7 +126,7 @@ class OCRBot:
         with open("user_passwords.csv", "r") as csv_file:
             reader = csv.reader(csv_file)
             for row in reader:
-                if str(user_id) == row[0] and password == row[1]:
+                if str(user_id) == row[0] and password == row[2]:
                     self.authorized_user_ids.append(user_id)
                     self.bot.reply_to(message, "ล็อกอินสำเร็จ")
                     return
@@ -143,14 +161,7 @@ class OCRBot:
                 image_file = self.bot.download_file(file_info.file_path)
                 self.bot.reply_to(message, "[BOT] ได้รับรูปภาพ")
 
-                # Read the image file
-                with io.BytesIO(image_file) as image_binary:
-                    content = image_binary.read()
-                image = vision.Image(content=content)
-
-                # Performs OCR on the image file
-                response = self.client.text_detection(image=image)
-                texts = response.text_annotations
+                texts = perform_ocr(self.client, image_file)
 
                 # Extract the text from the response
                 text = texts[0].description
