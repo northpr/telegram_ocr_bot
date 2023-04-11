@@ -173,7 +173,7 @@ class OCRBot:
                 # Download the image
                 file_info = self.bot.get_file(message.photo[-1].file_id)
                 image_file = self.bot.download_file(file_info.file_path)
-                self.bot.reply_to(message, "[BOT] ได้รับรูปภาพ")
+                self.bot.reply_to(message, "[BOT] ได้รับรูปภาพแล้ว โปรดรอสักครู่ ☺️")
 
                 texts = perform_ocr(self.client, image_file)
 
@@ -185,7 +185,7 @@ class OCRBot:
                 regex_result = regex_check(clean_text)
 
                 if regex_result['mistakes'] >= 2:
-                    result_msg = "[BOT] โปรดลองอีกครั้ง หรือตรวจว่าเป็นใบเสร็จ"
+                    result_msg = "[BOT] โปรดลองอีกครั้ง หรือตรวจสอบว่าเป็นใบเสร็จ"
                 else:
                     result_msg = f"[BOT]\n\nรหัสอ้างอิง: {regex_result['ref_id']}\
                         \nจำนวนเงิน: {regex_result['money_amt']}\
@@ -203,7 +203,7 @@ class OCRBot:
                 print(error_msg)
 
         else:
-            self.bot.reply_to(message, "[BOT] คุณไม่สามารถใช้บอทได้ถ้าย้งไม่เริ่มการใช้งานในแชทนี้")
+            self.bot.reply_to(message, "[BOT] คุณไม่สามารถใช้บอทได้ ถ้าย้งไม่เริ่มการใช้งานในแชทนี้")
 
 
 
