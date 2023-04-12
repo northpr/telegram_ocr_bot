@@ -4,6 +4,7 @@ from google.cloud import vision
 from helper import *
 from datetime import datetime
 
+print("Here's the test version")
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'g_credential.json' # Getting JSON file from Google Cloud
 client = vision.ImageAnnotatorClient()
 
@@ -27,8 +28,9 @@ texts = response.text_annotations
 
 # Extract the text from the response
 text = texts[0].description
-print(text)
+print(f"Dirty text: \n{text}")
 clean_text = remove_words(text)
+print(f"Clean text: \n{clean_text}")
 
 # Extract the reference ID and currency values from the text
 regex_result = regex_check(clean_text)
