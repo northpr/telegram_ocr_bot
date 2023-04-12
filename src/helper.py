@@ -28,9 +28,19 @@ def regex_check(ocr_results: str)->dict:
 
     # Checking ref_id
     ref_id = [int(x) for x in re.findall(r'20\d{16}', ocr_results)]
+    if len(ref_id) == 0:
+        # Try merging lines if normal regex search is not work
+        lines = ocr_results.split("\n")
+        for i, line in enumerate(lines[:-1]):
+            next_line = lines[i+1]
+            merged_line = line+next_line
+            ref_id = [int(x) for x in re.findall(r'20\d{16}', merged_line)]
+            if len(ref_id) > 0:
+                break
     if len(ref_id) == 0: # if nothing match
         ref_id.append("Please manually check ref_id again")
         mistakes += 1
+
     # Checking the money amout
     money_amt = re.findall(r'\b\d{1,3}(?:,\d{3})*\.\d{2}\b', ocr_results)
     money_amt = [float(f.replace(",", "")) for f in money_amt]
