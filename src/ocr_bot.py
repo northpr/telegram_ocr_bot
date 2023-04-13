@@ -3,7 +3,7 @@ import io
 import csv
 import os
 from google.cloud import vision
-from helper import remove_words, regex_check, perform_ocr
+from helper import remove_words, regex_check, perform_ocr, format_ref_id_time
 from config import *
 import datetime
 
@@ -173,16 +173,12 @@ class OCRBot:
                 # Download the image
                 file_info = self.bot.get_file(message.photo[-1].file_id)
                 image_file = self.bot.download_file(file_info.file_path)
-                self.bot.reply_to(message, "[BOT] ได้รับรูปภาพแล้ว โปรดรอสักครู่ ☺️")
+                self.bot.reply_to(message, "[BOT] ได้รับใบโอนเงินแล้ว โปรดรอสักครู่ ☺️")
 
                 texts = perform_ocr(self.client, image_file)
-
-                # Extract the text from the response
                 text = texts[0].description
-                clean_text = remove_words(text)
-
-                # Extract the reference ID and currency values from the text
-                regex_result = regex_check(clean_text)
+                clean_text = remove_words(text) # Remove unnesscessary words
+                regex_result = regex_check(clean_text) # Extract the reference ID and currency values from the text
 
                 if regex_result['mistakes'] >= 2:
                     result_msg = "[BOT] โปรดลองอีกครั้ง หรือตรวจสอบว่าเป็นใบเสร็จ"
@@ -190,7 +186,8 @@ class OCRBot:
                     result_msg = f"[BOT]\n\nรหัสอ้างอิง: {regex_result['ref_id']}\
                         \nจำนวนเงิน: {regex_result['money_amt']}\
                         \nผู้ฝาก: {regex_result['full_name']}\
-                        \nเวลาที่ทำรายการ: {regex_result['current_time']}"
+                        \nเวลาที่ทำรายการ: {format_ref_id_time(regex_result['ref_id'])}\
+                        \nเวลาที่ได้รับใบเสร็จ: {regex_result['current_time']}"
 
                 print(result_msg)
                 print("============\n")
@@ -205,7 +202,3 @@ class OCRBot:
         else:
             self.bot.reply_to(message, "[BOT] คุณไม่สามารถใช้บอทได้ ถ้าย้งไม่เริ่มการใช้งานในแชทนี้")
 
-
-
-        
-    

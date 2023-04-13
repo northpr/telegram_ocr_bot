@@ -35,11 +35,13 @@ print(f"Clean text: \n{clean_text}")
 # Extract the reference ID and currency values from the text
 regex_result = regex_check(clean_text)
 current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+print(type(regex_result['ref_id']))
 
     
 # Print the extracted numbers
 response = f"[BOT]\n\nรหัสอ้างอิง: {regex_result['ref_id']}\
                         \nจำนวนเงิน: {regex_result['money_amt']}\
                         \nผู้ฝาก: {regex_result['full_name']}\
-                        \nเวลาที่ทำรายการ: {regex_result['current_time']}"
+                        \nเวลาที่ทำรายการ: {format_ref_id_time(regex_result['ref_id'])}\
+                        \nเวลาที่ได้รับใบเสร็จ: {regex_result['current_time']}"
 print(response)

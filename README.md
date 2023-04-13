@@ -17,5 +17,6 @@ Please read how to install
     ```rm -rf .git```
 
 ## How to
-nbs = notebooks
-src = source codes
+nbs = notebooks\
+src = source codes\
+app = app for Dockerize
