@@ -3,12 +3,12 @@ import io
 import csv
 import os
 from google.cloud import vision
-from helper import remove_words, regex_check, perform_ocr
+from helper import remove_words, regex_check, perform_ocr, format_ref_id_time
 from config import *
 import datetime
 
 #TODO: Improve CSV file handling for database
-#TODO: Seperate state for each user (ocr_activated)
+#[X]: Seperate state for each user (ocr_activated_chatid)
 #TODO: More error handling
 #TODO: Make async function
 
@@ -22,8 +22,8 @@ class OCRBot:
             google_app_credentials (str): Path to the Vision AI Credential
         """
         self.bot = telebot.TeleBot(token)
-        self.ocr_activated = False
         self.authorized_user_ids = []
+        self.ocr_activated_chatid = {}
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = google_app_credentials
         self.client = vision.ImageAnnotatorClient()
 
@@ -38,6 +38,7 @@ class OCRBot:
         self.bot.message_handler(commands=["register"])(self.handle_register)
         self.bot.message_handler(commands=["activate"])(self.handle_activate)
         self.bot.message_handler(commands=["deactivate"])(self.handle_deactivate)
+        self.bot.message_handler(commands=["status"])(self.handle_status)
         self.bot.message_handler(commands=["login"])(self.handle_login)
         self.bot.message_handler(content_types=["photo"])(self.handle_image)
 
@@ -101,14 +102,33 @@ class OCRBot:
     def handle_activate(self, message):
         if not self.is_authorized(message):
             return
-        self.ocr_activated = True
+        self.ocr_activated_chatid[message.chat.id] = True
         self.bot.reply_to(message, "[BOT] เริ่มการใช้งาน OCR-Bot")
 
     def handle_deactivate(self, message):
         if not self.is_authorized(message):
             return
-        self.ocr_activated = False
+        self.ocr_activated_chatid[message.chat.id] = False
         self.bot.reply_to(message, "[BOT] ปิดการใช้งาน OCR-Bot")
+
+    def handle_status(self, message):
+        """
+        Check if the bot is activated or deactivated on that specific chat
+
+        Args:
+            message (_type_): _description_
+        """
+
+        if not self.is_authorized(message):
+            return
+        chat_id = message.chat.id
+        status = self.ocr_activated_chatid.get(chat_id, True)
+
+        if status:
+            response = "[BOT] บอทพร้อมทำงานค่ะ"
+        else:
+            response = "[BOT] บอทไม่พร้อมทำงานค่ะ รบกวนเปิดเพื่อใช้งาน"
+        self.bot.reply_to(message, response)
 
     def handle_login(self, message):
         chat_id = message.chat.id
@@ -148,29 +168,26 @@ class OCRBot:
         Args:
             message (telebot messages): The message from user that is the image.
         """
-        if self.ocr_activated:
+        if self.ocr_activated_chatid.get(message.chat.id, False): # TODO: Check this authorization in this line again.
             try:
                 # Download the image
                 file_info = self.bot.get_file(message.photo[-1].file_id)
                 image_file = self.bot.download_file(file_info.file_path)
-                self.bot.reply_to(message, "[BOT] ได้รับรูปภาพ")
+                self.bot.reply_to(message, "[BOT] ได้รับใบโอนเงินแล้ว โปรดรอสักครู่ ☺️")
 
                 texts = perform_ocr(self.client, image_file)
-
-                # Extract the text from the response
                 text = texts[0].description
-                clean_text = remove_words(text)
-
-                # Extract the reference ID and currency values from the text
-                regex_result = regex_check(clean_text)
+                clean_text = remove_words(text) # Remove unnesscessary words
+                regex_result = regex_check(clean_text) # Extract the reference ID and currency values from the text
 
                 if regex_result['mistakes'] >= 2:
-                    result_msg = "[BOT] โปรดลองอีกครั้ง หรือตรวจว่าเป็นใบเสร็จ"
+                    result_msg = "[BOT] โปรดลองอีกครั้ง หรือตรวจสอบว่าเป็นใบเสร็จ"
                 else:
-                    result_msg = f"[BOT]\n\nReference ID: {regex_result['ref_id']}\
-                        \nMoney Amount: {regex_result['money_amt']}\
-                        \nSender Name: {regex_result['full_name']}\
-                        \nCurrent time: {regex_result['current_time']}"
+                    result_msg = f"[BOT]\n\nรหัสอ้างอิง: {regex_result['ref_id']}\
+                        \nจำนวนเงิน: {regex_result['money_amt']}\
+                        \nผู้ฝาก: {regex_result['full_name']}\
+                        \nเวลาที่ทำรายการ: {format_ref_id_time(regex_result['ref_id'])}\
+                        \nเวลาที่ได้รับใบเสร็จ: {regex_result['current_time']}"
 
                 print(result_msg)
                 print("============\n")
@@ -182,7 +199,6 @@ class OCRBot:
                 self.bot.reply_to(message, error_msg)
                 print(error_msg)
 
+        else:
+            self.bot.reply_to(message, "[BOT] คุณไม่สามารถใช้บอทได้ ถ้าย้งไม่เริ่มการใช้งานในแชทนี้")
 
-
-        
-    
