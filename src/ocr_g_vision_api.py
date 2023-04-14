@@ -13,7 +13,7 @@ random_img_path = random_image("img_test")
 print(random_img_path)
 
 img_path = random_img_path
-specific_img_path = "img_test/ktb/ktb_64.jpg"
+specific_img_path = "img_test/kbank/kbank_24.jpg"
 
 # Read the image file
 with io.open(specific_img_path, 'rb') as image_file:
@@ -42,6 +42,7 @@ print(type(regex_result['ref_id']))
 response = f"[BOT]\n\nรหัสอ้างอิง: {regex_result['ref_id']}\
                         \nจำนวนเงิน: {regex_result['money_amt']}\
                         \nผู้ฝาก: {regex_result['full_name']}\
+                        \nเลขที่บัญชี: {regex_result['acc_number']}\
                         \nเวลาที่ทำรายการ: {format_ref_id_time(regex_result['ref_id'])}\
                         \nเวลาที่ได้รับใบเสร็จ: {regex_result['current_time']}"
 print(response)
