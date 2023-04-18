@@ -2,6 +2,8 @@ __pycache__/
 .ipynb_checkpoints
 .DS_Store
 .virtual_documents/
+app/g_credential.json
+app/config.py
 nbs/img_test
 src/img_test
 src/g_credential.json
