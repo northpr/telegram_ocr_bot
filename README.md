@@ -1,6 +1,6 @@
 Choose your preferred language:
-- [🇬🇧 English](README_EN.md)
-- [🇹🇭 ภาษาไทย](README_TH.md)
+
+[🇬🇧 English](README_EN.md) [🇹🇭 ภาษาไทย](README_TH.md)
 
 # 🤖 Telegram OCRBot for Bank Receipts
 This repository contains the source code for the Telegram OCRBot, a powerful bot that can extract text from bank receipt images shared on Telegram. The bot is designed to process receipts from multiple banks, primarily in the Thai language, and respond to the customers on the Telegram app.
