@@ -186,7 +186,8 @@ class OCRBot:
                     result_msg = f"[BOT]\n\nรหัสอ้างอิง: {regex_result['ref_id']}\
                         \nจำนวนเงิน: {regex_result['money_amt']}\
                         \nผู้ฝาก: {regex_result['full_name']}\
-                        \nเวลาที่ทำรายการ: {format_ref_id_time(regex_result['ref_id'])}\
+                        \nเลขที่บัญชี: {regex_result['acc_number']}\
+                        \n\nเวลาที่ทำรายการ: {format_ref_id_time(regex_result['ref_id'])}\
                         \nเวลาที่ได้รับใบเสร็จ: {regex_result['current_time']}"
 
                 print(result_msg)
@@ -201,4 +202,3 @@ class OCRBot:
 
         else:
             self.bot.reply_to(message, "[BOT] คุณไม่สามารถใช้บอทได้ ถ้าย้งไม่เริ่มการใช้งานในแชทนี้")
-

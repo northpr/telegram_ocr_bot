@@ -83,19 +83,3 @@ def perform_ocr(client, image_file):
     response = client.text_detection(image=image)
     texts = response.text_annotations
     return texts
-
-def random_image(directory):
-    # Search for all .jpg files in the specified directory and its subdirectories
-    image_files = []
-    for root, dirs, files in os.walk(directory):
-        for file in files:
-            if file.lower().endswith('.jpg'):
-                image_files.append(os.path.join(root, file))
-
-    # If there are no image files, return None
-    if not image_files:
-        return None
-
-    # Pick a random image file from the list of image files found, and return its path
-    random_image_path = random.choice(image_files)
-    return random_image_path
