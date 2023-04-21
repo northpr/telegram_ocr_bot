@@ -43,8 +43,7 @@ class OCRBot:
         self.bot.message_handler(content_types=["photo"])(self.handle_image)
 
     def run(self):
-        print("Start running the bot, please wait for 30 seconds")
-        print("==============\n")
+        print("RUNNING")
         self.bot.infinity_polling() # If it has some error it will try to restart
 
     #TODO: add more command guide...
@@ -98,6 +97,8 @@ class OCRBot:
             writer_object.writerow(user_list)
         response_msg = f"[BOT] {staff_id}\nการลงทะเบียนเสร็จสมบูรณ์ คุณสามารถล็อกอินโดยการพิมพ์ /login"
         self.bot.reply_to(message, response_msg)
+        log_msg = f"REGISTER, {staff_id}, {user_id}, {register_date}"
+        print(log_msg)
 
     def handle_activate(self, message):
         if not self.is_authorized(message):
@@ -118,7 +119,6 @@ class OCRBot:
         Args:
             message (_type_): _description_
         """
-
         if not self.is_authorized(message):
             return
         chat_id = message.chat.id
@@ -189,16 +189,16 @@ class OCRBot:
                         \nเลขที่บัญชี: {regex_result['acc_number']}\
                         \n\nเวลาที่ทำรายการ: {format_ref_id_time(regex_result['ref_id'])}\
                         \nเวลาที่ได้รับใบเสร็จ: {regex_result['current_time']}"
-
-                print(result_msg)
-                print("============\n")
+                log_msg = f"RESULT, {regex_result['ref_id']}, {regex_result['money_amt']}, \
+                    {regex_result['full_name']}, {regex_result['acc_number']}, {format_ref_id_time(regex_result['ref_id'])}"
+                print(log_msg)
                 # Send the message back to the user
                 self.bot.reply_to(message, result_msg)
             except Exception as e:
                 # Error message
                 error_msg = f"[BOT ERROR] Error performing OCR: {str(e)}"
                 self.bot.reply_to(message, error_msg)
-                print(error_msg)
+                print("ERROR")
 
         else:
             self.bot.reply_to(message, "[BOT] คุณไม่สามารถใช้บอทได้ ถ้าย้งไม่เริ่มการใช้งานในแชทนี้")
