@@ -3,7 +3,7 @@ import io
 import csv
 import os
 from google.cloud import vision
-from helper import remove_words, regex_check, perform_ocr, format_ref_id_time
+from helper import remove_words, regex_check, perform_ocr, format_ref_id_time, to_unix_timestamp
 from config import *
 import datetime
 
@@ -97,7 +97,7 @@ class OCRBot:
             writer_object.writerow(user_list)
         response_msg = f"[BOT] {staff_id}\nการลงทะเบียนเสร็จสมบูรณ์ คุณสามารถล็อกอินโดยการพิมพ์ /login"
         self.bot.reply_to(message, response_msg)
-        log_msg = f"REGISTER, {staff_id}, {user_id}, {register_date}"
+        log_msg = f"REGISTER, {to_unix_timestamp(register_date)}, {staff_id}, {user_id}"
         print(log_msg)
 
     def handle_activate(self, message):
@@ -188,10 +188,12 @@ class OCRBot:
                         \n\nรหัสอ้างอิง: {regex_result['ref_id']}\
                         \nชื่อผู้ทำรายการ: {regex_result['full_name']}\
                         \nเลขที่บัญชี: {regex_result['acc_number']}\
-                        \nจำนวนเงิน: {regex_result['money_amt']}\
+                        \nจำนวนเงิน: {'{:,.2f}'.format(regex_result['money_amt'])}\
                         \n\n>> ตรวจสอบรายการให้สักครู่ค่ะ 😋"
-                log_msg = f"RESULT, {regex_result['ref_id']}, {regex_result['money_amt']}, \
-{regex_result['full_name']}, {regex_result['acc_number']}"
+
+                # Setting up timestamp to unix for Grafana use    
+                log_msg = f"RESULT, {to_unix_timestamp(regex_result['current_time'])}, {regex_result['ref_id']}, \
+{regex_result['money_amt']}, {regex_result['full_name']}, {regex_result['acc_number']}"
                 print(log_msg)
                 # Send the message back to the user
                 self.bot.reply_to(message, result_msg)

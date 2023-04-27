@@ -73,16 +73,39 @@ def regex_check(ocr_results: str)->dict:
     acc_number = extract_acc_num(ocr_results)
 
     mistakes = sum(1 for x in [ref_id, money_amt, full_name, acc_number] if x is False)
-    current_time = datetime.now().strftime("%H:%M %d/%m/%Y")
+    current_time = datetime.now().strftime("%Y%m%d%H%M")
 
     return {
     "ref_id": ref_id if ref_id is not False else "โปรดตรวจสอบด้วยตัวเองอีกครั้ง",
-    "money_amt": '{:,.2f}'.format(money_amt) if money_amt is not False else "โปรดตรวจสอบด้วยตัวเองอีกครั้ง",
+    "money_amt":  money_amt if money_amt is not False else "โปรดตรวจสอบด้วยตัวเองอีกครั้ง",
     "full_name": full_name if full_name is not False else "โปรดตรวจสอบด้วยตัวเองอีกครั้ง",
     "acc_number": acc_number if acc_number is not False else "โปรดตรวจสอบด้วยตัวเองอีกครั้ง",
     "mistakes": mistakes,
     "current_time": current_time
         }
+
+def to_unix_timestamp(timestamp_str: str) -> int:
+    """
+    This function takes the input string, converts it to a datetime object using 
+    the specified format, and then converts the datetime object to a Unix timestamp.
+    You can use this Unix timestamp in Grafana for proper time representation.
+
+    Args:
+        timestamp_str (str): timestamp like 202304272135, 202302210940572991
+
+    Returns:
+        int: Timestamp in Unix
+    """
+    if not timestamp_str:
+        return -1
+    
+    try: 
+        timestamp_str = timestamp_str[:12]
+        timestamp_dt = datetime.strptime(timestamp_str, "%Y%m%d%H%M")
+        unix_timestamp = int(timestamp_dt.timestamp())
+        return unix_timestamp
+    except ValueError:
+        return -1
 
 ### JUST FOR LOCAL USE NOT IMPORTANT ###
 

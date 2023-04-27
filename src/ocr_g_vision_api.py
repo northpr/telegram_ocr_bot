@@ -34,6 +34,7 @@ print(f"Clean text: \n{clean_text}")
 
 # Extract the reference ID and currency values from the text
 regex_result = regex_check(clean_text)
+print(type(regex_result['money_amt']))
 
     
 # Print the extracted numbers
