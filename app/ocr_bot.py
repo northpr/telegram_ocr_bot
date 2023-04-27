@@ -3,7 +3,7 @@ import io
 import csv
 import os
 from google.cloud import vision
-from helper import remove_words, regex_check, perform_ocr, format_ref_id_time
+from helper import remove_words, regex_check, perform_ocr, format_ref_id_time, to_unix_timestamp
 from config import *
 import datetime
 
@@ -51,7 +51,7 @@ class OCRBot:
         welcome_msg = """ยินดีต้อนรับ เริ่มการใช้ OCR-Bot
 /activate - เริ่มการใช้บอท
 /deactivate - ปิดการใช้บอท
-/login - สำหรับการเข้าสู่ระบบ"""
+/status - เช็คสถานะบอท"""
         self.bot.reply_to(message, welcome_msg)
 
     def handle_register(self, message):
@@ -69,19 +69,19 @@ class OCRBot:
                 reader = csv.reader(csv_file)
                 for row in reader:
                     if str(user_id) == row[0]:
-                        self.bot.reply_to(message, "[BOT] คุณได้ทำการลงทะเบียนแล้ว")
+                        self.bot.reply_to(message, "[BOT ADMIN] คุณได้ทำการลงทะเบียนแล้ว")
                         return
                     
-            self.bot.reply_to(message, "[BOT] โปรดใส่รหัสพนักงานสำหรับการลงทะเบียน (ตัวอย่าง: SNO-0001)")
+            self.bot.reply_to(message, "[BOT ADMIN] โปรดใส่รหัสพนักงานสำหรับการลงทะเบียน (ตัวอย่าง: SNO-0001)")
             # lambda m: self.get_staff_id_and_password(m) Receive next message 
             # and calls the get_staff_id_and_password() function
             self.bot.register_next_step_handler(message, lambda m: self.get_staff_id_and_password(m))
         else:
-            self.bot.reply_to(message, "[BOT] การสมัครสามารถทำได้ในแชทส่วนตัวกับบอทเท่านั้น")
+            self.bot.reply_to(message, "[BOT ADMIN] การสมัครสามารถทำได้ในแชทส่วนตัวกับบอทเท่านั้น")
 
     def get_staff_id_and_password(self, message):
         staff_id = message.text
-        self.bot.reply_to(message, "[BOT] ใส่รหัสผ่านสำหรับการลงทะเบียนใช้บอท")
+        self.bot.reply_to(message, "[BOT ADMIN] ใส่รหัสผ่านสำหรับการลงทะเบียนใช้บอท")
         # lambda m: self.save_registration(m, staff_id) Receive next message 
         # and calls the `save_registration() method with this message and the previously obtained `staff_id`
         self.bot.register_next_step_handler(message, lambda m: self.save_registration(m, staff_id))
@@ -97,20 +97,20 @@ class OCRBot:
             writer_object.writerow(user_list)
         response_msg = f"[BOT] {staff_id}\nการลงทะเบียนเสร็จสมบูรณ์ คุณสามารถล็อกอินโดยการพิมพ์ /login"
         self.bot.reply_to(message, response_msg)
-        log_msg = f"REGISTER, {staff_id}, {user_id}, {register_date}"
+        log_msg = f"REGISTER, {to_unix_timestamp(register_date)}, {staff_id}, {user_id}"
         print(log_msg)
 
     def handle_activate(self, message):
         if not self.is_authorized(message):
             return
         self.ocr_activated_chatid[message.chat.id] = True
-        self.bot.reply_to(message, "[BOT] เริ่มการใช้งาน OCR-Bot")
+        self.bot.reply_to(message, "[Aquar Team] เริ่มการใช้งานค่ะ 🟢")
 
     def handle_deactivate(self, message):
         if not self.is_authorized(message):
             return
         self.ocr_activated_chatid[message.chat.id] = False
-        self.bot.reply_to(message, "[BOT] ปิดการใช้งาน OCR-Bot")
+        self.bot.reply_to(message, "[Aquar Team] ปิดการใช้งานค่ะ 🔴")
 
     def handle_status(self, message):
         """
@@ -125,17 +125,19 @@ class OCRBot:
         status = self.ocr_activated_chatid.get(chat_id, True)
 
         if status:
-            response = "[BOT] บอทพร้อมทำงานค่ะ"
+            response = "[Aquar Team] ระบบพร้อมทำงานค่ะ 🟢"
         else:
-            response = "[BOT] บอทไม่พร้อมทำงานค่ะ รบกวนเปิดเพื่อใช้งาน"
+            response = "[Aquar Team] ระบบไม่พร้อมทำงานค่ะ 🔴 รบกวน /activate เพื่อใช้งาน"
         self.bot.reply_to(message, response)
 
     def handle_login(self, message):
         chat_id = message.chat.id
         if chat_id in self.authorized_user_ids:
-            self.bot.reply_to(message, "[BOT] คุณได้ล็อกอินอยู่แล้ว")
+            self.bot.reply_to(message, "[BOT ADMIN] คุณได้ล็อกอินอยู่แล้ว")
+        elif message.chat.type != "private":
+            self.bot.reply_to(message, " [BOT ADMIN] ล็อกอินสามารถทำได้ในแชทส่วนตัวกับบอทเท่านั้น")
         else:
-            self.bot.reply_to(message, "[BOT] โปรดใส่รหัสผ่านเพื่อล็อกอิน")
+            self.bot.reply_to(message, "[BOT ADMIN] โปรดใส่รหัสผ่านเพื่อล็อกอิน")
             self.bot.register_next_step_handler(message, self.verify_password)
     
     def verify_password(self, message):
@@ -150,13 +152,12 @@ class OCRBot:
                     self.bot.reply_to(message, "ล็อกอินสำเร็จ")
                     return
                 
-        self.bot.reply_to(message, "[BOT] รหัสผ่านผิด โปรดลองอีกครั้ง หรือกด /login")
+        self.bot.reply_to(message, "[BOT ADMIN] รหัสผ่านผิด โปรดลองอีกครั้ง หรือกด /login")
 
-    #TODO: Fixing bot activation even not a user still could login
     def is_authorized(self, message):
         user_id = message.from_user.id
         if user_id not in self.authorized_user_ids:
-            self.bot.reply_to(message, "[BOT] คุณไม่มีสิทธิ์จะใช้บอท")
+            self.bot.reply_to(message, "[Aquar Team] โปรดติดต่อทีม Support เพื่อการดูแลค่ะ")
             return False
         return True
     
@@ -173,7 +174,7 @@ class OCRBot:
                 # Download the image
                 file_info = self.bot.get_file(message.photo[-1].file_id)
                 image_file = self.bot.download_file(file_info.file_path)
-                self.bot.reply_to(message, "[BOT] ได้รับใบโอนเงินแล้ว โปรดรอสักครู่ ☺️")
+                self.bot.reply_to(message, "[Aquar Team] รบกวนรอสักครู่นะคะ ☺️")
 
                 texts = perform_ocr(self.client, image_file)
                 text = texts[0].description
@@ -181,24 +182,26 @@ class OCRBot:
                 regex_result = regex_check(clean_text) # Extract the reference ID and currency values from the text
 
                 if regex_result['mistakes'] >= 2:
-                    result_msg = "[BOT] โปรดลองอีกครั้ง หรือตรวจสอบว่าเป็นใบเสร็จ"
+                    result_msg = "[BOT ADMIN] โปรดลองอีกครั้ง หรือตรวจสอบว่าเป็นใบเสร็จ"
                 else:
-                    result_msg = f"[BOT]\n\nรหัสอ้างอิง: {regex_result['ref_id']}\
-                        \nจำนวนเงิน: {regex_result['money_amt']}\
-                        \nผู้ฝาก: {regex_result['full_name']}\
+                    result_msg = f"[Aquar Team]\n\nเวลาที่ทำรายการ: {format_ref_id_time(regex_result['ref_id'])}\
+                        \n\nรหัสอ้างอิง: {regex_result['ref_id']}\
+                        \nชื่อผู้ทำรายการ: {regex_result['full_name']}\
                         \nเลขที่บัญชี: {regex_result['acc_number']}\
-                        \n\nเวลาที่ทำรายการ: {format_ref_id_time(regex_result['ref_id'])}\
-                        \nเวลาที่ได้รับใบเสร็จ: {regex_result['current_time']}"
-                log_msg = f"RESULT, {regex_result['ref_id']}, {regex_result['money_amt']}, \
-                    {regex_result['full_name']}, {regex_result['acc_number']}, {format_ref_id_time(regex_result['ref_id'])}"
+                        \nจำนวนเงิน: {'{:,.2f}'.format(regex_result['money_amt'])}\
+                        \n\n>> ตรวจสอบรายการให้สักครู่ค่ะ 😋"
+
+                # Setting up timestamp to unix for Grafana use    
+                log_msg = f"RESULT, {to_unix_timestamp(regex_result['current_time'])}, {regex_result['ref_id']}, \
+{regex_result['money_amt']}, {regex_result['full_name']}, {regex_result['acc_number']}"
                 print(log_msg)
                 # Send the message back to the user
                 self.bot.reply_to(message, result_msg)
             except Exception as e:
                 # Error message
-                error_msg = f"[BOT ERROR] Error performing OCR: {str(e)}"
+                error_msg = f"[Aquar Team] โปรดเช็คให้มั่นใจว่าเป็นใบโอนเงิน"
                 self.bot.reply_to(message, error_msg)
-                print("ERROR")
+                print(f"ERROR OCRError {str(e)}")
 
         else:
             self.bot.reply_to(message, "[BOT] คุณไม่สามารถใช้บอทได้ ถ้าย้งไม่เริ่มการใช้งานในแชทนี้")
