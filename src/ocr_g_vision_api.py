@@ -13,7 +13,7 @@ random_img_path = random_image("img_test")
 print(random_img_path)
 
 img_path = random_img_path
-specific_img_path = "img_test/kbank/kbank_24.jpg"
+specific_img_path = "img_test/kbank/kbank_62.jpg"
 
 # Read the image file
 with io.open(specific_img_path, 'rb') as image_file:
@@ -34,8 +34,6 @@ print(f"Clean text: \n{clean_text}")
 
 # Extract the reference ID and currency values from the text
 regex_result = regex_check(clean_text)
-current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-print(type(regex_result['ref_id']))
 
     
 # Print the extracted numbers
