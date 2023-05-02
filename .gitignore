@@ -5,6 +5,8 @@ __pycache__/
 app/g_credential.json
 app/config.py
 nbs/img_test
+nbs/config.py
+nbs/g_credential.json
 src/img_test
 src/g_credential.json
 src/config.py
