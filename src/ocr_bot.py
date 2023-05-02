@@ -7,8 +7,6 @@ from helper import remove_words, regex_check, perform_ocr, format_ref_id_time, t
 from config import *
 import datetime
 
-#TODO: Improve CSV file handling for database
-#[X]: Seperate state for each user (ocr_activated_chatid)
 #TODO: More error handling
 #TODO: Make async function
 
@@ -46,7 +44,6 @@ class OCRBot:
         print("RUNNING")
         self.bot.infinity_polling() # If it has some error it will try to restart
 
-    #TODO: add more command guide...
     def send_welcome(self, message):
         welcome_msg = """ยินดีต้อนรับ เริ่มการใช้ OCR-Bot
 /activate - เริ่มการใช้บอท
@@ -86,6 +83,7 @@ class OCRBot:
         # and calls the `save_registration() method with this message and the previously obtained `staff_id`
         self.bot.register_next_step_handler(message, lambda m: self.save_registration(m, staff_id))
 
+    # TODO: Change datetime to unix format in register_date variable
     def save_registration(self, message, staff_id):
         user_id = message.from_user.id
         password = message.text
@@ -169,7 +167,7 @@ class OCRBot:
         Args:
             message (telebot messages): The message from user that is the image.
         """
-        if self.ocr_activated_chatid.get(message.chat.id, False): # TODO: Check this authorization in this line again.
+        if self.ocr_activated_chatid.get(message.chat.id, False):
             try:
                 # Download the image
                 file_info = self.bot.get_file(message.photo[-1].file_id)

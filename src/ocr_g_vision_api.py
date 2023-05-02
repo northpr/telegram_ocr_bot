@@ -10,13 +10,10 @@ client = vision.ImageAnnotatorClient()
 
 # Load the image
 random_img_path = random_image("img_test")
-print(random_img_path)
-
-img_path = random_img_path
 specific_img_path = "img_test/kbank/kbank_62.jpg"
 
 # Read the image file
-with io.open(specific_img_path, 'rb') as image_file:
+with io.open(random_img_path, 'rb') as image_file:
     content = image_file.read()
 
 # Construct an image instance
@@ -28,20 +25,23 @@ texts = response.text_annotations
 
 # Extract the text from the response
 text = texts[0].description
+print(f"Img path: {random_img_path}")
 print(f"Dirty text: \n{text}")
+print("\n==============\n")
 clean_text = remove_words(text)
 print(f"Clean text: \n{clean_text}")
+print("\n==============\n")
+
 
 # Extract the reference ID and currency values from the text
 regex_result = regex_check(clean_text)
-print(type(regex_result['money_amt']))
 
     
 # Print the extracted numbers
-response = f"[BOT]\n\nรหัสอ้างอิง: {regex_result['ref_id']}\
-                        \nจำนวนเงิน: {regex_result['money_amt']}\
-                        \nผู้ฝาก: {regex_result['full_name']}\
+response = f"[Aquar Team]\n\nเวลาที่ทำรายการ: {format_ref_id_time(regex_result['ref_id'])}\
+                        \n\nรหัสอ้างอิง: {regex_result['ref_id']}\
+                        \nชื่อผู้ทำรายการ: {regex_result['full_name']}\
                         \nเลขที่บัญชี: {regex_result['acc_number']}\
-                        \nเวลาที่ทำรายการ: {format_ref_id_time(regex_result['ref_id'])}\
-                        \nเวลาที่ได้รับใบเสร็จ: {regex_result['current_time']}"
+                        \nจำนวนเงิน: {'{:,.2f}'.format(regex_result['money_amt'])}\
+                        \n\n>> ตรวจสอบรายการให้สักครู่ค่ะ 😋"
 print(response)
