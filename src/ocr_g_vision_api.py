@@ -4,13 +4,13 @@ from google.cloud import vision
 from helper import *
 from datetime import datetime
 
-print("Here's the test version")
+print("TEST VERSION\n")
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'g_credential.json' # Getting JSON file from Google Cloud
 client = vision.ImageAnnotatorClient()
 
 # Load the image
 random_img_path = random_image("img_test")
-specific_img_path = "img_test/kbank/kbank_62.jpg"
+specific_img_path = "img_test/gsb/gsb_2.jpg"
 
 # Read the image file
 with io.open(random_img_path, 'rb') as image_file:
@@ -26,7 +26,7 @@ texts = response.text_annotations
 # Extract the text from the response
 text = texts[0].description
 print(f"Img path: {random_img_path}")
-print(f"Dirty text: \n{text}")
+print(f"\nDirty text: \n{text}")
 print("\n==============\n")
 clean_text = remove_words(text)
 print(f"Clean text: \n{clean_text}")

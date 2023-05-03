@@ -48,7 +48,7 @@ def extract_full_name(ocr_results: str):
     return full_name[0] if len(full_name) > 0 else False
 
 def extract_acc_num(ocr_results: str):
-    pattern_acc_number = r'[Xx]{3}[-\w\d]+'
+    pattern_acc_number = r'(?:[Xx]{3}|(?:0202|0203))[-\w\d]+'
     account_numbers = re.findall(pattern_acc_number, ocr_results)
     return account_numbers[0] if len(account_numbers) > 0 else False
 
