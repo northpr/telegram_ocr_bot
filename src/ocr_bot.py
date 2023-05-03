@@ -1,5 +1,4 @@
 import telebot
-import io
 import csv
 import os
 from google.cloud import vision

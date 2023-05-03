@@ -15,7 +15,6 @@ def parse_args():
 
 def main():
     args = parse_args()
-    print("TEST VERSION\n")
     client = vision.ImageAnnotatorClient()
     #  Argparse
     if args.random:
@@ -34,24 +33,27 @@ def main():
     text = texts[0].description
     clean_text = remove_words(text)
     regex_result = regex_check(clean_text)
-    
+    log_msg = f"RESULT, TEST_NO_MESSAGE_INFO, {regex_result['ref_id']}, \
+{regex_result['money_amt']}, {regex_result['full_name']}, {regex_result['acc_number']}"
     # Print the extracted numbers
-    response = f"[Aquar Team]\n\nเวลาที่ทำรายการ: {format_ref_id_time(regex_result['ref_id'])}\
-                            \n\nรหัสอ้างอิง: {regex_result['ref_id']}\
-                            \nชื่อผู้ทำรายการ: {regex_result['full_name']}\
-                            \nเลขที่บัญชี: {regex_result['acc_number']}\
-                            \nจำนวนเงิน: {'{:,.2f}'.format(regex_result['money_amt'])}\
-                            \n\n>> ตรวจสอบรายการให้สักครู่ค่ะ 😋"
+    result_msg = f"เวลาที่ทำรายการ: {format_ref_id_time(regex_result['ref_id'])}\
+                        \nหัสอ้างอิง: {regex_result['ref_id']}\
+                        \nชื่อผู้ทำรายการ: {regex_result['full_name']}\
+                        \nเลขที่บัญชี: {regex_result['acc_number']}\
+                        \nจำนวนเงิน: {'{:,.2f}'.format(regex_result['money_amt'])}"
     if args.quiet:
-        print(f"Img path: {img_path}")
-        print(response)
+        print(log_msg)
+        print(f"Path: {img_path}")
+
     else:
-        print(f"Img path: {img_path}")
+        print(f"Path: {img_path}")
         print(f"\nDirty text: \n{text}")
         print("\n==============\n")
         print(f"Clean text: \n{clean_text}")
         print("\n==============\n")
-        print(response)
+        print(result_msg)
+        print("\n==============\n")
+        print(log_msg)
 
 if __name__ == "__main__":
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'g_credential.json' # Getting JSON file from Google Cloud
