@@ -84,6 +84,16 @@ def regex_check(ocr_results: str)->dict:
     "current_time": current_time
         }
 
+def extract_message_info(message):
+    message_info = {
+        "chat_id" : message.chat.id,
+        "chat_title": message.chat.title,
+        "user_id": message.from_user.id,
+        "user_username": message.from_user.username,
+        "user_firstname": message.from_user.first_name
+    }
+    return message_info
+
 def to_unix_timestamp(timestamp_str: str) -> int:
     """
     This function takes the input string, converts it to a datetime object using 

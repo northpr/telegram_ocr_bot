@@ -3,7 +3,7 @@ import io
 import csv
 import os
 from google.cloud import vision
-from helper import remove_words, regex_check, perform_ocr, format_ref_id_time, to_unix_timestamp
+from helper import remove_words, regex_check, perform_ocr, format_ref_id_time, extract_message_info
 from config import *
 import datetime
 
@@ -95,7 +95,7 @@ class OCRBot:
             writer_object.writerow(user_list)
         response_msg = f"[BOT] {staff_id}\nการลงทะเบียนเสร็จสมบูรณ์ คุณสามารถล็อกอินโดยการพิมพ์ /login"
         self.bot.reply_to(message, response_msg)
-        log_msg = f"REGISTER, {to_unix_timestamp(register_date)}, {staff_id}, {user_id}"
+        log_msg = f"REGISTER, {staff_id}, {user_id}"
         print(log_msg)
 
     def handle_activate(self, message):
@@ -103,6 +103,11 @@ class OCRBot:
             return
         self.ocr_activated_chatid[message.chat.id] = True
         self.bot.reply_to(message, "[Aquar Team] เริ่มการใช้งานค่ะ 🟢")
+        # Providing log on which chat the bot is activated
+        user_id = message.from_user.id
+        chat_id = message.chat.id
+        log_msg = f"ACTIVATE, {user_id}, {chat_id}"
+        print(log_msg)
 
     def handle_deactivate(self, message):
         if not self.is_authorized(message):
@@ -169,11 +174,13 @@ class OCRBot:
         """
         if self.ocr_activated_chatid.get(message.chat.id, False):
             try:
+                # Getting the information of the message
+                message_info = extract_message_info(message)
                 # Download the image
                 file_info = self.bot.get_file(message.photo[-1].file_id)
                 image_file = self.bot.download_file(file_info.file_path)
                 self.bot.reply_to(message, "[Aquar Team] รบกวนรอสักครู่นะคะ ☺️")
-
+                # Performing OCR
                 texts = perform_ocr(self.client, image_file)
                 text = texts[0].description
                 clean_text = remove_words(text) # Remove unnesscessary words
@@ -189,9 +196,10 @@ class OCRBot:
                         \nจำนวนเงิน: {'{:,.2f}'.format(regex_result['money_amt'])}\
                         \n\n>> ตรวจสอบรายการให้สักครู่ค่ะ 😋"
 
-                # Setting up timestamp to unix for Grafana use    
-                log_msg = f"RESULT, {to_unix_timestamp(regex_result['current_time'])}, {regex_result['ref_id']}, \
-{regex_result['money_amt']}, {regex_result['full_name']}, {regex_result['acc_number']}"
+                # Setting up log for Grafana use    
+                log_msg = f"RESULT, {message_info['chat_id']}, {message_info['chat_title']}, \
+{message_info['user_id']}, {message_info['user_username']}, {message_info['user_firstname']}, \
+{regex_result['ref_id']}, {regex_result['money_amt']}, {regex_result['full_name']}, {regex_result['acc_number']}"
                 print(log_msg)
                 # Send the message back to the user
                 self.bot.reply_to(message, result_msg)
