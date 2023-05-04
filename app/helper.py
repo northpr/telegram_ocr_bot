@@ -14,10 +14,10 @@ def perform_ocr(client, image_file):
     return texts
 
 def remove_words(ocr_result: str)-> str:
-    remove_words = ["จ่ายบิลสําเร็จ", "วีเพย์", "VPAY","เลขที่รายการ", "ผู้รับเงินสามารถสแกนคิวอาร์โค้ด"
-                    "ธ.กสิกรไทย", "ธ.กสิกรไทย", "จํานวน:", "จำนวน:", "จำนวนเงิน", "ค่าธรรมเนียม:",
+    remove_words = ["จ่ายบิลสําเร็จ", "วีเพย์", "VPAY","เลขที่รายการ", "ผู้รับเงินสามารถสแกนคิวอาร์โค้ด",
+                    "จํานวน:", "จำนวน:", "จำนวนเงิน", "ค่าธรรมเนียม:",
                     "สแกนตรวจสอบสลิป", "จาก", "ไปยัง", "จํานวนเงิน", "จ่ายบิลสำเร็จ", "๒ ", "๒"
-                    "รหัสอ้างอิง", "กรุงไทย", "วันเดือนปีที่ทํารายการ", "ค่าธรรมเนียม", "วันเดือนปีที่ทำรายการ"]
+                    "รหัสอ้างอิง", "วันเดือนปีที่ทํารายการ", "ค่าธรรมเนียม", "วันเดือนปีที่ทำรายการ"]
     pattern = "|".join(remove_words)
     clean_text = re.sub(pattern, "", ocr_result)
     return clean_text
@@ -48,9 +48,24 @@ def extract_full_name(ocr_results: str):
     return full_name[0] if len(full_name) > 0 else False
 
 def extract_acc_num(ocr_results: str):
-    pattern_acc_number = r'[Xx]{3}[-\w\d]+'
+    pattern_acc_number = r'(?:[Xx]{3}|(?:0202|0203))[-\w\d]+'
     account_numbers = re.findall(pattern_acc_number, ocr_results)
     return account_numbers[0] if len(account_numbers) > 0 else False
+
+def extract_bank_name(ocr_results: str) -> str:
+    bank_keywords = {
+        "kbank": r"(กสิกรไทย|ธ\.กสิกรไทย)",
+        "scb": r"(SCB|scb\.)",
+        "gsb": r"(gsb|GSB)",
+        "ktb": r"(Krungthai|กรุงไทย)"
+    }
+
+    for bank_name, pattern in bank_keywords.items():
+        if re.search(pattern, ocr_results):
+            return bank_name
+
+    return "unknown"
+
 
 def format_ref_id_time(ref_id: int) -> str:
     try:
@@ -71,6 +86,7 @@ def regex_check(ocr_results: str)->dict:
     money_amt = extract_money(ocr_results)
     full_name = extract_full_name(ocr_results)
     acc_number = extract_acc_num(ocr_results)
+    bank_name = extract_bank_name(ocr_results)
 
     mistakes = sum(1 for x in [ref_id, money_amt, full_name, acc_number] if x is False)
     current_time = datetime.now().strftime("%Y%m%d%H%M")
@@ -80,9 +96,20 @@ def regex_check(ocr_results: str)->dict:
     "money_amt":  money_amt if money_amt is not False else "โปรดตรวจสอบด้วยตัวเองอีกครั้ง",
     "full_name": full_name if full_name is not False else "โปรดตรวจสอบด้วยตัวเองอีกครั้ง",
     "acc_number": acc_number if acc_number is not False else "โปรดตรวจสอบด้วยตัวเองอีกครั้ง",
+    "bank_name": bank_name,
     "mistakes": mistakes,
     "current_time": current_time
         }
+
+def extract_message_info(message):
+    message_info = {
+        "chat_id" : message.chat.id,
+        "chat_title": message.chat.title,
+        "user_id": message.from_user.id,
+        "user_username": message.from_user.username,
+        "user_firstname": message.from_user.first_name
+    }
+    return message_info
 
 def to_unix_timestamp(timestamp_str: str) -> int:
     """
@@ -109,10 +136,22 @@ def to_unix_timestamp(timestamp_str: str) -> int:
 
 ### JUST FOR LOCAL USE NOT IMPORTANT ###
 
-def random_image(directory):
+def find_img(rand_dir: str, spec_img_path=None)-> str:
+    """
+    Getting an image randomly or by specific path.
+
+    Args:
+        directory (str): directory
+        specific_image_path (_type_, optional): _description_. Defaults to None.
+
+    Returns:
+        str: _description_
+    """
+    if spec_img_path:
+        return spec_img_path
     # Search for all .jpg files in the specified directory and its subdirectories
     image_files = []
-    for root, dirs, files in os.walk(directory):
+    for root, dirs, files in os.walk(rand_dir):
         for file in files:
             if file.lower().endswith('.jpg'):
                 image_files.append(os.path.join(root, file))

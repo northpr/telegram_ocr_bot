@@ -84,6 +84,7 @@ class OCRBot:
 
     # TODO: Change datetime to unix format in register_date variable
     def save_registration(self, message, staff_id):
+        message_info = extract_message_info(message)
         user_id = message.from_user.id
         password = message.text
         register_date = datetime.datetime.now().strftime("%d-%m-%Y")
@@ -94,25 +95,32 @@ class OCRBot:
             writer_object.writerow(user_list)
         response_msg = f"[BOT] {staff_id}\nการลงทะเบียนเสร็จสมบูรณ์ คุณสามารถล็อกอินโดยการพิมพ์ /login"
         self.bot.reply_to(message, response_msg)
-        log_msg = f"REGISTER, {staff_id}, {user_id}"
+        log_msg = f"REGISTER, {staff_id}, {message_info['user_id']}, {message_info['user_username']}, \
+{message_info['user_firstname']}"
         print(log_msg)
 
     def handle_activate(self, message):
         if not self.is_authorized(message):
             return
+        message_info = extract_message_info(message)
         self.ocr_activated_chatid[message.chat.id] = True
         self.bot.reply_to(message, "[Aquar Team] เริ่มการใช้งานค่ะ 🟢")
         # Providing log on which chat the bot is activated
         user_id = message.from_user.id
         chat_id = message.chat.id
-        log_msg = f"ACTIVATE, {user_id}, {chat_id}"
+        log_msg = f"ACTIVATE, {message_info['user_id']}, {message_info['chat_id']}, \
+{message_info['user_username']}, {message_info['user_firstname']}"
         print(log_msg)
 
     def handle_deactivate(self, message):
         if not self.is_authorized(message):
             return
+        message_info = extract_message_info(message)
         self.ocr_activated_chatid[message.chat.id] = False
         self.bot.reply_to(message, "[Aquar Team] ปิดการใช้งานค่ะ 🔴")
+        log_msg = f"DEACTIVATE, {message_info['user_id']}, {message_info['chat_id']}, \
+{message_info['user_username']}, {message_info['user_firstname']}"
+        print(log_msg)
 
     def handle_status(self, message):
         """
@@ -198,7 +206,8 @@ class OCRBot:
                 # Setting up log for Grafana use    
                 log_msg = f"RESULT, {message_info['chat_id']}, {message_info['chat_title']}, \
 {message_info['user_id']}, {message_info['user_username']}, {message_info['user_firstname']}, \
-{regex_result['ref_id']}, {regex_result['money_amt']}, {regex_result['full_name']}, {regex_result['acc_number']}"
+{regex_result['ref_id']}, {regex_result['money_amt']}, {regex_result['full_name']}, \
+{regex_result['acc_number']}, {regex_result['bank_name']}"
                 print(log_msg)
                 # Send the message back to the user
                 self.bot.reply_to(message, result_msg)
@@ -206,7 +215,9 @@ class OCRBot:
                 # Error message
                 error_msg = f"[Aquar Team] โปรดเช็คให้มั่นใจว่าเป็นใบโอนเงิน"
                 self.bot.reply_to(message, error_msg)
-                print(f"ERROR OCRError {str(e)}")
+                log_msg = f"OCR_ERROR, {message_info['chat_id']}, {message_info['chat_title']}, \
+{message_info['user_id']}, {message_info['user_username']}, {message_info['user_firstname']},"
+                print(log_msg)
 
         else:
             self.bot.reply_to(message, "[BOT] คุณไม่สามารถใช้บอทได้ ถ้าย้งไม่เริ่มการใช้งานในแชทนี้")

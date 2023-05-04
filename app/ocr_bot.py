@@ -1,14 +1,11 @@
 import telebot
-import io
 import csv
 import os
 from google.cloud import vision
-from helper import remove_words, regex_check, perform_ocr, format_ref_id_time, to_unix_timestamp
+from helper import remove_words, regex_check, perform_ocr, format_ref_id_time, extract_message_info
 from config import *
 import datetime
 
-#TODO: Improve CSV file handling for database
-#[X]: Seperate state for each user (ocr_activated_chatid)
 #TODO: More error handling
 #TODO: Make async function
 
@@ -46,7 +43,6 @@ class OCRBot:
         print("RUNNING")
         self.bot.infinity_polling() # If it has some error it will try to restart
 
-    #TODO: add more command guide...
     def send_welcome(self, message):
         welcome_msg = """ยินดีต้อนรับ เริ่มการใช้ OCR-Bot
 /activate - เริ่มการใช้บอท
@@ -86,7 +82,9 @@ class OCRBot:
         # and calls the `save_registration() method with this message and the previously obtained `staff_id`
         self.bot.register_next_step_handler(message, lambda m: self.save_registration(m, staff_id))
 
+    # TODO: Change datetime to unix format in register_date variable
     def save_registration(self, message, staff_id):
+        message_info = extract_message_info(message)
         user_id = message.from_user.id
         password = message.text
         register_date = datetime.datetime.now().strftime("%d-%m-%Y")
@@ -97,20 +95,32 @@ class OCRBot:
             writer_object.writerow(user_list)
         response_msg = f"[BOT] {staff_id}\nการลงทะเบียนเสร็จสมบูรณ์ คุณสามารถล็อกอินโดยการพิมพ์ /login"
         self.bot.reply_to(message, response_msg)
-        log_msg = f"REGISTER, {to_unix_timestamp(register_date)}, {staff_id}, {user_id}"
+        log_msg = f"REGISTER, {staff_id}, {message_info['user_id']}, {message_info['user_username']}, \
+{message_info['user_firstname']}"
         print(log_msg)
 
     def handle_activate(self, message):
         if not self.is_authorized(message):
             return
+        message_info = extract_message_info(message)
         self.ocr_activated_chatid[message.chat.id] = True
         self.bot.reply_to(message, "[Aquar Team] เริ่มการใช้งานค่ะ 🟢")
+        # Providing log on which chat the bot is activated
+        user_id = message.from_user.id
+        chat_id = message.chat.id
+        log_msg = f"ACTIVATE, {message_info['user_id']}, {message_info['chat_id']}, \
+{message_info['user_username']}, {message_info['user_firstname']}"
+        print(log_msg)
 
     def handle_deactivate(self, message):
         if not self.is_authorized(message):
             return
+        message_info = extract_message_info(message)
         self.ocr_activated_chatid[message.chat.id] = False
         self.bot.reply_to(message, "[Aquar Team] ปิดการใช้งานค่ะ 🔴")
+        log_msg = f"DEACTIVATE, {message_info['user_id']}, {message_info['chat_id']}, \
+{message_info['user_username']}, {message_info['user_firstname']}"
+        print(log_msg)
 
     def handle_status(self, message):
         """
@@ -169,13 +179,15 @@ class OCRBot:
         Args:
             message (telebot messages): The message from user that is the image.
         """
-        if self.ocr_activated_chatid.get(message.chat.id, False): # TODO: Check this authorization in this line again.
+        if self.ocr_activated_chatid.get(message.chat.id, False):
             try:
+                # Getting the information of the message
+                message_info = extract_message_info(message)
                 # Download the image
                 file_info = self.bot.get_file(message.photo[-1].file_id)
                 image_file = self.bot.download_file(file_info.file_path)
                 self.bot.reply_to(message, "[Aquar Team] รบกวนรอสักครู่นะคะ ☺️")
-
+                # Performing OCR
                 texts = perform_ocr(self.client, image_file)
                 text = texts[0].description
                 clean_text = remove_words(text) # Remove unnesscessary words
@@ -191,9 +203,11 @@ class OCRBot:
                         \nจำนวนเงิน: {'{:,.2f}'.format(regex_result['money_amt'])}\
                         \n\n>> ตรวจสอบรายการให้สักครู่ค่ะ 😋"
 
-                # Setting up timestamp to unix for Grafana use    
-                log_msg = f"RESULT, {to_unix_timestamp(regex_result['current_time'])}, {regex_result['ref_id']}, \
-{regex_result['money_amt']}, {regex_result['full_name']}, {regex_result['acc_number']}"
+                # Setting up log for Grafana use    
+                log_msg = f"RESULT, {message_info['chat_id']}, {message_info['chat_title']}, \
+{message_info['user_id']}, {message_info['user_username']}, {message_info['user_firstname']}, \
+{regex_result['ref_id']}, {regex_result['money_amt']}, {regex_result['full_name']}, \
+{regex_result['acc_number']}, {regex_result['bank_name']}"
                 print(log_msg)
                 # Send the message back to the user
                 self.bot.reply_to(message, result_msg)
@@ -201,7 +215,9 @@ class OCRBot:
                 # Error message
                 error_msg = f"[Aquar Team] โปรดเช็คให้มั่นใจว่าเป็นใบโอนเงิน"
                 self.bot.reply_to(message, error_msg)
-                print(f"ERROR OCRError {str(e)}")
+                log_msg = f"OCR_ERROR, {message_info['chat_id']}, {message_info['chat_title']}, \
+{message_info['user_id']}, {message_info['user_username']}, {message_info['user_firstname']},"
+                print(log_msg)
 
         else:
             self.bot.reply_to(message, "[BOT] คุณไม่สามารถใช้บอทได้ ถ้าย้งไม่เริ่มการใช้งานในแชทนี้")

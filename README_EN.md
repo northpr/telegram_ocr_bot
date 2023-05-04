@@ -53,3 +53,17 @@ The current approach involves using the Google Vision API to perform OCR on the 
 | 2 | Donut by HuggingFace | - Excellent results on SROIE dataset | - Requires knowledge of PyTorch and HuggingFace <br> - Does not support Thai language |
 | 3 | LayoutLM by HuggingFace | - High accuracy with sufficient labeled data | - Complex implementation <br> - Time-consuming to train <br> - Cost optimization and deployment challenges |
 | 4 (Current) | Google Vision + Regular Expression | - Fast and cost-effective <br> - Supports Thai language <br> - Simple but effective | - Accuracy may suffer in certain cases (e.g., multi-line text) |
+
+# Changelog
+## 1.3 (2023-05-04)
+- Fix and improve CloudWatch log
+- Add new function to extract name of the bank
+- Refractor code
+## 1.1 (2023-04-21)
+- Add new functions to extract account number
+- Add more features based on users feedback
+- Change chat dialogue to make it more user-friendly
+- Fixing minor bugs
+## 1.0 (2023-04-20)
+- Initial release
+- Support 2 banks (Kbank, scb)

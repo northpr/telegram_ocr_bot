@@ -34,7 +34,7 @@ def main():
     clean_text = remove_words(text)
     regex_result = regex_check(clean_text)
     log_msg = f"RESULT, TEST_NO_MESSAGE_INFO, {regex_result['ref_id']}, \
-{regex_result['money_amt']}, {regex_result['full_name']}, {regex_result['acc_number']}"
+{regex_result['money_amt']}, {regex_result['full_name']}, {regex_result['acc_number']}, {regex_result['bank_name']}"
     # Print the extracted numbers
     result_msg = f"เวลาที่ทำรายการ: {format_ref_id_time(regex_result['ref_id'])}\
                         \nหัสอ้างอิง: {regex_result['ref_id']}\

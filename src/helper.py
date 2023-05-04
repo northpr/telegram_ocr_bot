@@ -14,10 +14,10 @@ def perform_ocr(client, image_file):
     return texts
 
 def remove_words(ocr_result: str)-> str:
-    remove_words = ["จ่ายบิลสําเร็จ", "วีเพย์", "VPAY","เลขที่รายการ", "ผู้รับเงินสามารถสแกนคิวอาร์โค้ด"
-                    "ธ.กสิกรไทย", "ธ.กสิกรไทย", "จํานวน:", "จำนวน:", "จำนวนเงิน", "ค่าธรรมเนียม:",
+    remove_words = ["จ่ายบิลสําเร็จ", "วีเพย์", "VPAY","เลขที่รายการ", "ผู้รับเงินสามารถสแกนคิวอาร์โค้ด",
+                    "จํานวน:", "จำนวน:", "จำนวนเงิน", "ค่าธรรมเนียม:",
                     "สแกนตรวจสอบสลิป", "จาก", "ไปยัง", "จํานวนเงิน", "จ่ายบิลสำเร็จ", "๒ ", "๒"
-                    "รหัสอ้างอิง", "กรุงไทย", "วันเดือนปีที่ทํารายการ", "ค่าธรรมเนียม", "วันเดือนปีที่ทำรายการ"]
+                    "รหัสอ้างอิง", "วันเดือนปีที่ทํารายการ", "ค่าธรรมเนียม", "วันเดือนปีที่ทำรายการ"]
     pattern = "|".join(remove_words)
     clean_text = re.sub(pattern, "", ocr_result)
     return clean_text
@@ -52,6 +52,21 @@ def extract_acc_num(ocr_results: str):
     account_numbers = re.findall(pattern_acc_number, ocr_results)
     return account_numbers[0] if len(account_numbers) > 0 else False
 
+def extract_bank_name(ocr_results: str) -> str:
+    bank_keywords = {
+        "kbank": r"(กสิกรไทย|ธ\.กสิกรไทย)",
+        "scb": r"(SCB|scb\.)",
+        "gsb": r"(gsb|GSB)",
+        "ktb": r"(Krungthai|กรุงไทย)"
+    }
+
+    for bank_name, pattern in bank_keywords.items():
+        if re.search(pattern, ocr_results):
+            return bank_name
+
+    return "unknown"
+
+
 def format_ref_id_time(ref_id: int) -> str:
     try:
         ref_id_str = str(ref_id)
@@ -71,6 +86,7 @@ def regex_check(ocr_results: str)->dict:
     money_amt = extract_money(ocr_results)
     full_name = extract_full_name(ocr_results)
     acc_number = extract_acc_num(ocr_results)
+    bank_name = extract_bank_name(ocr_results)
 
     mistakes = sum(1 for x in [ref_id, money_amt, full_name, acc_number] if x is False)
     current_time = datetime.now().strftime("%Y%m%d%H%M")
@@ -80,6 +96,7 @@ def regex_check(ocr_results: str)->dict:
     "money_amt":  money_amt if money_amt is not False else "โปรดตรวจสอบด้วยตัวเองอีกครั้ง",
     "full_name": full_name if full_name is not False else "โปรดตรวจสอบด้วยตัวเองอีกครั้ง",
     "acc_number": acc_number if acc_number is not False else "โปรดตรวจสอบด้วยตัวเองอีกครั้ง",
+    "bank_name": bank_name,
     "mistakes": mistakes,
     "current_time": current_time
         }
