@@ -4,10 +4,12 @@ import os
 from google.cloud import vision
 from helper import remove_words, regex_check, perform_ocr, format_ref_id_time, extract_message_info
 from config import *
+import time
 import datetime
 
 #TODO: More error handling
 #TODO: Make async function
+#TODO: Change database for registration and activated_chatid
 
 class OCRBot:
     def __init__(self, token, google_app_credentials):
@@ -41,7 +43,11 @@ class OCRBot:
 
     def run(self):
         print("RUNNING")
-        self.bot.infinity_polling() # If it has some error it will try to restart
+        try:
+            self.bot.infinity_polling() # If it has some error it will try to restart
+        except Exception as e:
+            print("ERROR, API_ERROR_ACCESS")
+            time.sleep(1)
 
     def send_welcome(self, message):
         welcome_msg = """ยินดีต้อนรับ เริ่มการใช้ OCR-Bot
@@ -82,7 +88,6 @@ class OCRBot:
         # and calls the `save_registration() method with this message and the previously obtained `staff_id`
         self.bot.register_next_step_handler(message, lambda m: self.save_registration(m, staff_id))
 
-    # TODO: Change datetime to unix format in register_date variable
     def save_registration(self, message, staff_id):
         message_info = extract_message_info(message)
         user_id = message.from_user.id

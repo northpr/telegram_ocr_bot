@@ -48,11 +48,11 @@ def main():
     else:
         print(f"Path: {img_path}")
         print(f"\nDirty text: \n{text}")
-        print("\n==============\n")
+        print("\n---------------\n")
         print(f"Clean text: \n{clean_text}")
-        print("\n==============\n")
+        print("\n---------------\n")
         print(result_msg)
-        print("\n==============\n")
+        print("\n---------------\n")
         print(log_msg)
 
 if __name__ == "__main__":
