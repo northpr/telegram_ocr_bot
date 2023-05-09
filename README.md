@@ -55,6 +55,9 @@ The current approach involves using the Google Vision API to perform OCR on the 
 | 4 (Current) | Google Vision + Regular Expression | - Fast and cost-effective <br> - Supports Thai language <br> - Simple but effective | - Accuracy may suffer in certain cases (e.g., multi-line text) |
 
 # Changelog
+## 1.4 (2023-05-05)
+- Change new credential
+- Add more security to prevent data leak
 ## 1.3 (2023-05-04)
 - Fix and improve CloudWatch log
 - Add new function to extract name of the bank
