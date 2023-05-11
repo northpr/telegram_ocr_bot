@@ -2,7 +2,7 @@ import telebot
 import csv
 import os
 from google.cloud import vision
-from helper import remove_words, regex_check, perform_ocr, format_ref_id_time, extract_message_info
+from receipt_helper import OCRVision, VPayExtractor, TeleHelper, Utils
 from config import *
 import time
 import datetime
@@ -89,7 +89,7 @@ class OCRBot:
         self.bot.register_next_step_handler(message, lambda m: self.save_registration(m, staff_id))
 
     def save_registration(self, message, staff_id):
-        message_info = extract_message_info(message)
+        message_info = TeleHelper.extract_message_info(message)
         user_id = message.from_user.id
         password = message.text
         register_date = datetime.datetime.now().strftime("%d-%m-%Y")
@@ -107,7 +107,7 @@ class OCRBot:
     def handle_activate(self, message):
         if not self.is_authorized(message):
             return
-        message_info = extract_message_info(message)
+        message_info = TeleHelper.extract_message_info(message)
         self.ocr_activated_chatid[message.chat.id] = True
         self.bot.reply_to(message, "[Aquar Team] เริ่มการใช้งานค่ะ 🟢")
         # Providing log on which chat the bot is activated
@@ -120,7 +120,7 @@ class OCRBot:
     def handle_deactivate(self, message):
         if not self.is_authorized(message):
             return
-        message_info = extract_message_info(message)
+        message_info = TeleHelper.extract_message_info(message)
         self.ocr_activated_chatid[message.chat.id] = False
         self.bot.reply_to(message, "[Aquar Team] ปิดการใช้งานค่ะ 🔴")
         log_msg = f"DEACTIVATE, {message_info['user_id']}, {message_info['chat_id']}, \
@@ -187,21 +187,21 @@ class OCRBot:
         if self.ocr_activated_chatid.get(message.chat.id, False):
             try:
                 # Getting the information of the message
-                message_info = extract_message_info(message)
+                message_info = TeleHelper.extract_message_info(message)
                 # Download the image
                 file_info = self.bot.get_file(message.photo[-1].file_id)
                 image_file = self.bot.download_file(file_info.file_path)
                 self.bot.reply_to(message, "[Aquar Team] รบกวนรอสักครู่นะคะ ☺️")
                 # Performing OCR
-                texts = perform_ocr(self.client, image_file)
+                texts = OCRVision.perform_ocr(self.client, image_file)
                 text = texts[0].description
-                clean_text = remove_words(text) # Remove unnesscessary words
-                regex_result = regex_check(clean_text) # Extract the reference ID and currency values from the text
+                clean_text = VPayExtractor.remove_words(text) # Remove unnesscessary words
+                regex_result = VPayExtractor.regex_check(clean_text) # Extract the reference ID and currency values from the text
 
                 if regex_result['mistakes'] >= 2:
                     result_msg = "[BOT ADMIN] โปรดลองอีกครั้ง หรือตรวจสอบว่าเป็นใบเสร็จ"
                 else:
-                    result_msg = f"[Aquar Team]\n\nเวลาที่ทำรายการ: {format_ref_id_time(regex_result['ref_id'])}\
+                    result_msg = f"[Aquar Team]\n\nเวลาที่ทำรายการ: {Utils.format_ref_id_time(regex_result['ref_id'])}\
                         \n\nรหัสอ้างอิง: {regex_result['ref_id']}\
                         \nชื่อผู้ทำรายการ: {regex_result['full_name']}\
                         \nเลขที่บัญชี: {regex_result['acc_number']}\
