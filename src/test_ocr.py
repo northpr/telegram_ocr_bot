@@ -1,9 +1,11 @@
 import io
 import os
 from google.cloud import vision
-from receipt_helper import OCRVision, VPayExtractor, Utils
+from receipt_processor import OCRVision, VPayExtractor
+from utils import Utils
 from datetime import datetime
 import argparse
+import csv
 
 def parse_args():
     parser = argparse.ArgumentParser(description="OCR image processing")
@@ -19,9 +21,9 @@ def main():
     client = vision.ImageAnnotatorClient()
     for i in range(0, args.number):
         if args.random:
-            img_path = Utils.find_img(rand_dir="img_test")
+            img_path, img_name = Utils.find_img(rand_dir="data/img")
         else:
-            img_path = Utils.find_img(rand_dir="img_path", spec_img_path=args.path)
+            img_path, img_name = Utils.find_img(rand_dir="img_path", spec_img_path=args.path)
         if not img_path:
             print("Image not found. Please check the specified path.")
             return
@@ -31,19 +33,26 @@ def main():
             content = image_file.read()
         print(f"PATH: {img_path}")
         texts = OCRVision.perform_ocr(client, content)
-        # Extract the text from the response
+        # Extract the text and from the response
         text = texts[0].description
         clean_text = VPayExtractor.remove_words(text)
         regex_result = VPayExtractor.regex_check(clean_text)
-        log_msg = f"RESULT, {regex_result['ref_id']}, {regex_result['trans_id']}, \
+        log_msg = f"{i}, {img_name} ,{regex_result['ref_id']}, {regex_result['trans_id']}, \
 {regex_result['money_amt']}, {regex_result['full_name']}, {regex_result['acc_number']}, {regex_result['bank_name']}"
+        # Write the extracted data to a CSV file
+        with open('data/log.csv', 'a', newline='') as f:
+            writer = csv.writer(f)
+            if f.tell() == 0:
+                writer.writerow(['img_name','ref_id', 'trans_id', 'money_amt', 'full_name', 'acc_number', 'bank_name'])
+            writer.writerow([img_name, regex_result['ref_id'], regex_result['trans_id'], regex_result['money_amt'],
+                            regex_result['full_name'], regex_result['acc_number'], regex_result['bank_name']])
         # Print the extracted numbers
         result_msg = f"เวลาที่ทำรายการ: {Utils.format_ref_id_time(regex_result['ref_id'])}\
                             \nรหัสอ้างอิง: {regex_result['ref_id']}\
                             \nรหัสรายการ: {regex_result['trans_id']}\
                             \nชื่อผู้ทำรายการ: {regex_result['full_name']}\
                             \nเลขที่บัญชี: {regex_result['acc_number']}\
-                            \nจำนวนเงิน: {'{:,.2f}'.format(regex_result['money_amt'])}"
+                            \nจำนวนเงิน: {regex_result['money_amt']}"
         if args.quiet:
             print(log_msg)
         else:
