@@ -1,8 +1,8 @@
 from receipt_processor import VPayExtractor
 import re
 
-ocr_results = "Krungthai\nกรุงไทย\n\nรหัสอ้างอิง\n2023022487937713\nน.ส.ชลาลัย มณฑาสวิน\nกรุงไทย\nXXX-X-XX320-3\n\n(010556213625103)\nวันเดือนปีที่ทํา\nรายการ\nวันเดือนปีที่ทํา\nรายการ\n\n\nวันที่ทำรายการ\n2023022423194\n99720\n2023022423194\n95592\n1,000.00 บาท\n0.00 บาท\n24 ก.พ. 2556 -\n23:20"
+ocr_results = "Krungthai\nกรุงไทย\n จ\nรหัสอ้างอิง\n20230215803654\n21\nนายทาน เกิดชะนะ\nกรุงไทย\nXXX-X-XX171-5\n\n(010556213625103)\n\n202302152129006808\n\n202302152129009288\nA\n300.00 บาท\n\n\n0.00 บาท\nวันที่ทำรายการ 15 ก.พ. 2556 -\n21:29"
 clean_text = VPayExtractor.remove_words(ocr_results)
-clean_text_list = clean_text.split("\n")
-numbers = [re.findall(r'20\d{8,}', s) for s in clean_text_list]
-print(numbers)
+# print(clean_text)
+clean_text = VPayExtractor.extract_trans_id(clean_text,"ktb")
+print(clean_text)

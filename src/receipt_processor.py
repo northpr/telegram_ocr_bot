@@ -47,28 +47,13 @@ class VPayExtractor():
     @staticmethod
     def extract_ref_id(ocr_results: str) -> Union[str ,bool]:
         # Checking ref_id
-        ref_id = [int(x) for x in re.findall(r'20\d{16}', ocr_results)]
-        if len(ref_id) == 0:
-            try:
-                # Try merging lines if normal regex search is not work
-                lines = ocr_results.split("\n")
-                for i, line in enumerate(lines[0:-1]):
-                    next_line = lines[i+1]
-                    merged_line = line+next_line
-                    ref_id = [int(x) for x in re.findall(r'20\d{10,16}', merged_line)]
-                    if len(ref_id) > 0:
-                        break
-            except IndexError:
-                pass
-        return ref_id[0] if len(ref_id) > 0 else False
-    
-    # @staticmethod
-    # def test_extract_ref_id(ocr_results: str):
-    #     ref_id = [int(x) for x in re.findall(r'20\d{16}', ocr_results)]
-    #     if len(ref_id) == 0:
-    #         try:
-    #             lines = ocr_results.split("\n")
-    #             for i, line in enumerate(lines[0:1]):
+        try:
+            ref_id = [int(x) for x in re.findall(r'20\d{16}', ocr_results)]
+            if len(ref_id) == 0:
+                return False
+            return ref_id[0] if len(ref_id) > 0 else False
+        except Exception as e:
+            return False
 
     
     @staticmethod
@@ -104,32 +89,46 @@ class VPayExtractor():
     
     @staticmethod
     def extract_trans_id(ocr_results: str, bank_name: str) -> str:
-        trans_id = None
-        if bank_name == "ktb":
-            matches = re.findall(r'\b\d{16}\b', ocr_results)
-        elif bank_name == "kbank":
-            matches = re.findall(r'\b[A-Za-z0-9]{20}\b', ocr_results)
-        else:
-            # The transaction ID should have a minimum length of 20 characters
-            matches = re.findall(r'\b[A-Za-z0-9]{20,}\b', ocr_results)
-        
-        if not matches:
-            lines = ocr_results.split("\n")
-            try:
-                for i, line in enumerate(lines):
-                    next_line = lines[i+1]
-                    merged_line = line+next_line
-                    if bank_name == "ktb":
-                        matches = re.findall(r'\b\d{16}\b', merged_line)
-                    elif bank_name == "kbank":
-                        matches = re.findall(r'\b[A-Za-z0-9]{20}\b', merged_line)
-                    else:
-                        matches = re.findall(r'\b[A-Za-z0-9]{21,}\b', merged_line)
-            except IndexError:
-                return False
-        trans_id = matches[0] if matches else False
+        try:
+        # Predefine the regular expression patterns for each bank
+            patterns = {
+                'ktb': r'\b\d{16}\b',
+                'kbank': r'\b[A-Za-z0-9]{20}\b',
+            }
 
-        return trans_id
+            # Get the pattern for the bank or use the default pattern
+            pattern = patterns.get(bank_name, r'\b[A-Za-z0-9]{20,}\b')
+            matches = re.findall(pattern, ocr_results)
+
+            # If no matches found, then try to construct the transaction id from two parts
+            if not matches:
+                if bank_name == "kbank":
+                    first_trans_id_match = re.search(r'\b(?!20)[A-Za-z0-9]{16,}\b', ocr_results)
+                    transaction_id_len = 20
+                elif bank_name == "ktb":
+                    first_trans_id_match = re.search(r'\b20\d{10,15}\b', ocr_results)
+                    transaction_id_len = 16
+                else: return False
+
+                if first_trans_id_match:
+                    first_trans_id = first_trans_id_match.group(0)
+                    print(f"First_trans_id: {first_trans_id}")
+                    missing_trans_id_digts = transaction_id_len - len(first_trans_id)
+                    print(missing_trans_id_digts)
+                    # Find the second part of the transaction id
+                    lines = ocr_results.split("\n")
+                    if first_trans_id in lines:
+                        match_index = lines.index(first_trans_id)
+                        value_after_matches = lines[match_index+1:match_index+4]
+                        
+                        for line in value_after_matches:
+                            sec_trans_id_match = re.search(r'\b[A-Za-z0-9]{' + str(missing_trans_id_digts) + r'}\b', line)
+                            if sec_trans_id_match:
+                                sec_trans_id = sec_trans_id_match.group(0)
+                                return first_trans_id + sec_trans_id  # Combine the two parts and return
+            return matches[0] if matches else False
+        except Exception as e:
+            return False
 
     @staticmethod
     def regex_check(ocr_results: str)-> Dict[str, Union[str, int, float, bool]]:

@@ -2,7 +2,7 @@ import telebot
 import csv
 import os
 from google.cloud import vision
-from receipt_helper import OCRVision, VPayExtractor, TeleHelper, Utils
+from receipt_processor import OCRVision, VPayExtractor, TeleHelper, Utils
 from config import *
 import time
 import datetime
@@ -205,7 +205,7 @@ class OCRBot:
                         \n\nรหัสอ้างอิง: {regex_result['ref_id']}\
                         \nชื่อผู้ทำรายการ: {regex_result['full_name']}\
                         \nเลขที่บัญชี: {regex_result['acc_number']}\
-                        \nจำนวนเงิน: {'{:,.2f}'.format(regex_result['money_amt'])}\
+                        \nจำนวนเงิน: {regex_result['money_amt']}\
                         \n\n>> ตรวจสอบรายการให้สักครู่ค่ะ 😋"
 
                 # Setting up log for Grafana use    
