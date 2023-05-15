@@ -1,8 +1,7 @@
 from receipt_processor import VPayExtractor
 import re
+from utils import Utils
 
-ocr_results = "Krungthai\nกรุงไทย\n จ\nรหัสอ้างอิง\n20230215803654\n21\nนายทาน เกิดชะนะ\nกรุงไทย\nXXX-X-XX171-5\n\n(010556213625103)\n\n202302152129006808\n\n202302152129009288\nA\n300.00 บาท\n\n\n0.00 บาท\nวันที่ทำรายการ 15 ก.พ. 2556 -\n21:29"
-clean_text = VPayExtractor.remove_words(ocr_results)
-# print(clean_text)
-clean_text = VPayExtractor.extract_trans_id(clean_text,"ktb")
+formatted_ref_id = "202302251753069243"
+clean_text = Utils.format_ref_id_time(formatted_ref_id)
 print(clean_text)

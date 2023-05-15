@@ -4,11 +4,12 @@ from datetime import datetime
 import random
 
 class Utils():
-    # TODO: Fixing time reference to make it check only set of number
     @staticmethod
     def format_ref_id_time(ref_id: int) -> str:
         try:
             ref_id_str = str(ref_id)
+            if not ref_id_str.isdigit() or len(ref_id_str) != 18:
+                return False
             year = ref_id_str[0:4]
             month = ref_id_str[4:6]
             day = ref_id_str[6:8]
@@ -18,7 +19,7 @@ class Utils():
             formatted_date_time = f"{hour}:{minute} {day}/{month}/{year}"
             return formatted_date_time
         except:
-            return "โปรดตรวจสอบด้วยตัวเองอีกครั้ง"
+            return False
 
     @staticmethod
     def to_unix_timestamp(timestamp_str: str) -> int:

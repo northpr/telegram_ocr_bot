@@ -2,6 +2,7 @@ import io
 import re
 from datetime import datetime
 from typing import List, Dict, Tuple, Union
+from utils import Utils
 from google.cloud import vision
 
 class OCRVision():
@@ -133,6 +134,7 @@ class VPayExtractor():
     @staticmethod
     def regex_check(ocr_results: str)-> Dict[str, Union[str, int, float, bool]]:
         ref_id = VPayExtractor.extract_ref_id(ocr_results)
+        formatted_ref_id = Utils.format_ref_id_time(ref_id)
         money_amt = VPayExtractor.extract_money(ocr_results)
         full_name = VPayExtractor.extract_full_name(ocr_results)
         acc_number = VPayExtractor.extract_acc_num(ocr_results)
@@ -142,6 +144,7 @@ class VPayExtractor():
         current_time = datetime.now().strftime("%Y%m%d%H%M")
         return {
         "ref_id": ref_id if ref_id is not False else "โปรดตรวจสอบอีกครั้ง",
+        "formatted_ref_id": formatted_ref_id if formatted_ref_id is not False else "โปรดตรวจสอบอีกครั้ง",
         "money_amt":  '{:,.2f}'.format(money_amt) if money_amt is not False else "โปรดตรวจสอบอีกครั้ง",
         "full_name": full_name if full_name is not False else "โปรดตรวจสอบอีกครั้ง",
         "acc_number": acc_number if acc_number is not False else "โปรดตรวจสอบอีกครั้ง",

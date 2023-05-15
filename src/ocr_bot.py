@@ -201,7 +201,7 @@ class OCRBot:
                 if regex_result['mistakes'] >= 2:
                     result_msg = "[BOT ADMIN] โปรดลองอีกครั้ง หรือตรวจสอบว่าเป็นใบเสร็จ"
                 else:
-                    result_msg = f"[Aquar Team]\n\nเวลาที่ทำรายการ: {Utils.format_ref_id_time(regex_result['ref_id'])}\
+                    result_msg = f"[Aquar Team]\n\nเวลาที่ทำรายการ: {regex_result['formatted_ref_id']}\
                         \n\nรหัสอ้างอิง: {regex_result['ref_id']}\
                         \nชื่อผู้ทำรายการ: {regex_result['full_name']}\
                         \nเลขที่บัญชี: {regex_result['acc_number']}\
