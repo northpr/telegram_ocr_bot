@@ -10,6 +10,7 @@ import datetime
 #TODO: More error handling
 #TODO: Make async function
 #TODO: Change database for registration and activated_chatid
+#TODO: boto3 for register and activate chatroom
 
 class OCRBot:
     def __init__(self, token, google_app_credentials):

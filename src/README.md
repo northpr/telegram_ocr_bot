@@ -3,8 +3,9 @@
 
 `VPayExtractor` - is responsible for extraction of different fields from OCR results. Like OCRVison, all methods in this class are static as well.
 
-`Helper` - provides various helper functions such as formatting a reference ID and time, converting to Unix timestamp, and finding an image. All methods in this class are static.
+`TeleHelper` - is responsible for extracting message information from a Telegram message. All methods in this class are static.
 
-`TeleInfo` - is responsible for extracting message information from a Telegram message. All methods in this class are static.
 
-## 
+## utils.py
+
+`Utils` - provides various helper functions such as formatting a reference ID and time, converting to Unix timestamp, and finding an image. All methods in this class are static.

@@ -89,7 +89,18 @@ class VPayExtractor():
         return "unknown"
     
     @staticmethod
-    def extract_trans_id(ocr_results: str, bank_name: str) -> str:
+    def extract_trans_id(ocr_results: str, bank_name: str) -> Union[str, bool]:
+        """
+        For extract transaction_id. Some of the receipt is 2 line so we need second approach to handle.
+        Because of the every bank have different transaction id pattern so it would be better to have specific transaction id pattern.
+
+        Args:
+            ocr_results (str): 
+            bank_name (str): _description_
+
+        Returns:
+            str: _description_
+        """
         try:
         # Predefine the regular expression patterns for each bank
             patterns = {
@@ -133,6 +144,15 @@ class VPayExtractor():
 
     @staticmethod
     def regex_check(ocr_results: str)-> Dict[str, Union[str, int, float, bool]]:
+        """
+        For checking all of the extraction before
+
+        Args:
+            ocr_results (str): Results of the OCR after clean with remove_words()
+
+        Returns:
+            Dict[str, Union[str, int, float, bool]]: _description_
+        """
         ref_id = VPayExtractor.extract_ref_id(ocr_results)
         formatted_ref_id = Utils.format_ref_id_time(ref_id)
         money_amt = VPayExtractor.extract_money(ocr_results)
