@@ -2,7 +2,8 @@ import telebot
 import csv
 import os
 from google.cloud import vision
-from receipt_processor import OCRVision, VPayExtractor, TeleHelper, Utils
+from receipt_processor import OCRVision, VPayExtractor
+from tele_msg import TeleHelper
 from config import *
 import time
 import datetime
@@ -199,20 +200,12 @@ class OCRBot:
                 clean_text = VPayExtractor.remove_words(text) # Remove unnesscessary words
                 regex_result = VPayExtractor.regex_check(clean_text) # Extract the reference ID and currency values from the text
 
-                if regex_result['mistakes'] >= 2:
-                    result_msg = "[BOT ADMIN] โปรดลองอีกครั้ง หรือตรวจสอบว่าเป็นใบเสร็จ"
-                else:
-                    result_msg = f"[Aquar Team]\n\nเวลาที่ทำรายการ: {regex_result['formatted_ref_id']}\
-                        \n\nรหัสอ้างอิง: {regex_result['ref_id']}\
-                        \nชื่อผู้ทำรายการ: {regex_result['full_name']}\
-                        \nเลขที่บัญชี: {regex_result['acc_number']}\
-                        \nจำนวนเงิน: {regex_result['money_amt']}\
-                        \n\n>> ตรวจสอบรายการให้สักครู่ค่ะ 😋"
+                result_msg = TeleHelper.response_result_msg(regex_result, mistakes=regex_result['mistakes'] >= 2)
 
                 # Setting up log for Grafana use    
                 log_msg = f"RESULT, {message_info['chat_id']}, {message_info['chat_title']}, \
 {message_info['user_id']}, {message_info['user_username']}, {message_info['user_firstname']}, \
-{regex_result['ref_id']}, {regex_result['money_amt']}, {regex_result['full_name']}, \
+{regex_result['ref_id']}, {regex_result['trans_id']}, {regex_result['money_amt']}, {regex_result['full_name']}, \
 {regex_result['acc_number']}, {regex_result['bank_name']}"
                 print(log_msg)
                 # Send the message back to the user

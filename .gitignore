@@ -9,5 +9,5 @@ nbs/config.py
 nbs/g_credential.json
 src/g_credential.json
 src/config.py
-src/data
 src/test_script.py
+data/

@@ -9,7 +9,8 @@ class OCRVision():
     @staticmethod
     def perform_ocr(client, image_file) -> str:
         """
-        Perform OCR on the given image file
+        ! If this function working slow. Check your internet first before make any changes.
+        Perform OCR on the given image file.
 
         Args:
             client (_type_): _description_
@@ -174,14 +175,3 @@ class VPayExtractor():
         "current_time": current_time
             }
 
-class TeleHelper():
-    @staticmethod
-    def extract_message_info(message):
-        message_info = {
-            "chat_id" : message.chat.id,
-            "chat_title": message.chat.title,
-            "user_id": message.from_user.id,
-            "user_username": message.from_user.username,
-            "user_firstname": message.from_user.first_name
-        }
-        return message_info

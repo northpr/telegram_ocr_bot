@@ -2,6 +2,7 @@ import io
 import os
 from google.cloud import vision
 from receipt_processor import OCRVision, VPayExtractor
+from tele_msg import TeleHelper
 from utils import Utils
 from datetime import datetime
 import argparse
@@ -21,7 +22,7 @@ def main():
     client = vision.ImageAnnotatorClient()
     for i in range(0, args.number):
         if args.random:
-            img_path, img_name = Utils.find_img(rand_dir="data/img")
+            img_path, img_name = Utils.find_img(rand_dir="../data/img")
         else:
             img_path, img_name = Utils.find_img(rand_dir="img_path", spec_img_path=args.path)
         if not img_path:
@@ -33,6 +34,7 @@ def main():
             content = image_file.read()
         print(f"PATH: {img_path}")
         texts = OCRVision.perform_ocr(client, content)
+        print('speedtest')
         # Extract the text and from the response
         text = texts[0].description
         clean_text = VPayExtractor.remove_words(text)
@@ -40,19 +42,15 @@ def main():
         log_msg = f"{i}, {img_name} ,{regex_result['ref_id']}, {regex_result['trans_id']}, \
 {regex_result['money_amt']}, {regex_result['full_name']}, {regex_result['acc_number']}, {regex_result['bank_name']}"
         # Write the extracted data to a CSV file
-        with open('data/log.csv', 'a', newline='') as f:
+        with open('../data/log.csv', 'a', newline='') as f:
             writer = csv.writer(f)
             if f.tell() == 0:
                 writer.writerow(['img_name','ref_id', 'trans_id', 'money_amt', 'full_name', 'acc_number', 'bank_name'])
             writer.writerow([img_name, regex_result['ref_id'], regex_result['trans_id'], regex_result['money_amt'],
                             regex_result['full_name'], regex_result['acc_number'], regex_result['bank_name']])
         # Print the extracted numbers
-        result_msg = f"เวลาที่ทำรายการ: {Utils.format_ref_id_time(regex_result['ref_id'])}\
-                            \nรหัสอ้างอิง: {regex_result['ref_id']}\
-                            \nรหัสรายการ: {regex_result['trans_id']}\
-                            \nชื่อผู้ทำรายการ: {regex_result['full_name']}\
-                            \nเลขที่บัญชี: {regex_result['acc_number']}\
-                            \nจำนวนเงิน: {regex_result['money_amt']}"
+        result_msg = TeleHelper.response_result_msg(regex_result=regex_result, mistakes=regex_result['mistakes'] >= 2)
+
         if args.quiet:
             print(log_msg)
         else:
