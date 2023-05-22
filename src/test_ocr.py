@@ -34,7 +34,6 @@ def main():
             content = image_file.read()
         print(f"PATH: {img_path}")
         texts = OCRVision.perform_ocr(client, content)
-        print('speedtest')
         # Extract the text and from the response
         text = texts[0].description
         clean_text = VPayExtractor.remove_words(text)
