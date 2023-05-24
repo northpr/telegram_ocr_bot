@@ -2,12 +2,16 @@ import telebot
 import csv
 import os
 from google.cloud import vision
-from helper import remove_words, regex_check, perform_ocr, format_ref_id_time, extract_message_info
+from receipt_processor import OCRVision, VPayExtractor
+from tele_msg import TeleHelper
 from config import *
+import time
 import datetime
 
 #TODO: More error handling
 #TODO: Make async function
+#TODO: Change database for registration and activated_chatid
+#TODO: boto3 for register and activate chatroom
 
 class OCRBot:
     def __init__(self, token, google_app_credentials):
@@ -41,7 +45,11 @@ class OCRBot:
 
     def run(self):
         print("RUNNING")
-        self.bot.infinity_polling() # If it has some error it will try to restart
+        try:
+            self.bot.infinity_polling() # If it has some error it will try to restart
+        except Exception as e:
+            print("ERROR, API_ERROR_ACCESS")
+            time.sleep(1)
 
     def send_welcome(self, message):
         welcome_msg = """ยินดีต้อนรับ เริ่มการใช้ OCR-Bot
@@ -82,9 +90,8 @@ class OCRBot:
         # and calls the `save_registration() method with this message and the previously obtained `staff_id`
         self.bot.register_next_step_handler(message, lambda m: self.save_registration(m, staff_id))
 
-    # TODO: Change datetime to unix format in register_date variable
     def save_registration(self, message, staff_id):
-        message_info = extract_message_info(message)
+        message_info = TeleHelper.extract_message_info(message)
         user_id = message.from_user.id
         password = message.text
         register_date = datetime.datetime.now().strftime("%d-%m-%Y")
@@ -102,7 +109,7 @@ class OCRBot:
     def handle_activate(self, message):
         if not self.is_authorized(message):
             return
-        message_info = extract_message_info(message)
+        message_info = TeleHelper.extract_message_info(message)
         self.ocr_activated_chatid[message.chat.id] = True
         self.bot.reply_to(message, "[Aquar Team] เริ่มการใช้งานค่ะ 🟢")
         # Providing log on which chat the bot is activated
@@ -115,7 +122,7 @@ class OCRBot:
     def handle_deactivate(self, message):
         if not self.is_authorized(message):
             return
-        message_info = extract_message_info(message)
+        message_info = TeleHelper.extract_message_info(message)
         self.ocr_activated_chatid[message.chat.id] = False
         self.bot.reply_to(message, "[Aquar Team] ปิดการใช้งานค่ะ 🔴")
         log_msg = f"DEACTIVATE, {message_info['user_id']}, {message_info['chat_id']}, \
@@ -182,31 +189,23 @@ class OCRBot:
         if self.ocr_activated_chatid.get(message.chat.id, False):
             try:
                 # Getting the information of the message
-                message_info = extract_message_info(message)
+                message_info = TeleHelper.extract_message_info(message)
                 # Download the image
                 file_info = self.bot.get_file(message.photo[-1].file_id)
                 image_file = self.bot.download_file(file_info.file_path)
                 self.bot.reply_to(message, "[Aquar Team] รบกวนรอสักครู่นะคะ ☺️")
                 # Performing OCR
-                texts = perform_ocr(self.client, image_file)
+                texts = OCRVision.perform_ocr(self.client, image_file)
                 text = texts[0].description
-                clean_text = remove_words(text) # Remove unnesscessary words
-                regex_result = regex_check(clean_text) # Extract the reference ID and currency values from the text
-
-                if regex_result['mistakes'] >= 2:
-                    result_msg = "[BOT ADMIN] โปรดลองอีกครั้ง หรือตรวจสอบว่าเป็นใบเสร็จ"
-                else:
-                    result_msg = f"[Aquar Team]\n\nเวลาที่ทำรายการ: {format_ref_id_time(regex_result['ref_id'])}\
-                        \n\nรหัสอ้างอิง: {regex_result['ref_id']}\
-                        \nชื่อผู้ทำรายการ: {regex_result['full_name']}\
-                        \nเลขที่บัญชี: {regex_result['acc_number']}\
-                        \nจำนวนเงิน: {'{:,.2f}'.format(regex_result['money_amt'])}\
-                        \n\n>> ตรวจสอบรายการให้สักครู่ค่ะ 😋"
+                clean_text = VPayExtractor.remove_words(text) # Remove unnesscessary words
+                regex_result = VPayExtractor.regex_check(clean_text) # Extract the reference ID and currency values from the text
+                # response message to customer on Telegram
+                result_msg = TeleHelper.response_result_msg(regex_result, mistakes=regex_result['mistakes'] >= 2)
 
                 # Setting up log for Grafana use    
                 log_msg = f"RESULT, {message_info['chat_id']}, {message_info['chat_title']}, \
 {message_info['user_id']}, {message_info['user_username']}, {message_info['user_firstname']}, \
-{regex_result['ref_id']}, {regex_result['money_amt']}, {regex_result['full_name']}, \
+{regex_result['ref_id']}, {regex_result['trans_id']}, {regex_result['money_amt']}, {regex_result['full_name']}, \
 {regex_result['acc_number']}, {regex_result['bank_name']}"
                 print(log_msg)
                 # Send the message back to the user

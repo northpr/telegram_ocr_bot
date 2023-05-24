@@ -115,7 +115,7 @@ class OCRBot:
         # Providing log on which chat the bot is activated
         user_id = message.from_user.id
         chat_id = message.chat.id
-        log_msg = f"ACTIVATE, {message_info['user_id']}, {message_info['chat_id']}, \
+        log_msg = f"ACTIVATE, {message_info['user_id']}, {message_info['chat_id']}, {message_info['chat_title']},\
 {message_info['user_username']}, {message_info['user_firstname']}"
         print(log_msg)
 
@@ -199,7 +199,7 @@ class OCRBot:
                 text = texts[0].description
                 clean_text = VPayExtractor.remove_words(text) # Remove unnesscessary words
                 regex_result = VPayExtractor.regex_check(clean_text) # Extract the reference ID and currency values from the text
-
+                # response message to customer on Telegram
                 result_msg = TeleHelper.response_result_msg(regex_result, mistakes=regex_result['mistakes'] >= 2)
 
                 # Setting up log for Grafana use    

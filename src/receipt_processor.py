@@ -125,9 +125,7 @@ class VPayExtractor():
 
                 if first_trans_id_match:
                     first_trans_id = first_trans_id_match.group(0)
-                    print(f"First_trans_id: {first_trans_id}")
                     missing_trans_id_digts = transaction_id_len - len(first_trans_id)
-                    print(missing_trans_id_digts)
                     # Find the second part of the transaction id
                     lines = ocr_results.split("\n")
                     if first_trans_id in lines:
