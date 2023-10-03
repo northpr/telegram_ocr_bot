@@ -181,7 +181,7 @@ class OCRBot:
     
     def handle_image(self, message):
         """
-        Process an image by using Google Vision AI and extracts relavant information,
+        Process an image by using Google Vision AI, qr decoding and extracts relavant information,
         and sends the results back to the user.
 
         Args:
@@ -195,6 +195,10 @@ class OCRBot:
                 file_info = self.bot.get_file(message.photo[-1].file_id)
                 image_file = self.bot.download_file(file_info.file_path)
                 self.bot.reply_to(message, "[Aquar Team] รบกวนรอสักครู่นะคะ ☺️")
+                # Performing QR decoding
+                qr_content = VPayExtractor.qr_decode(image_file=image_file)
+                if qr_content:
+                    print(f"Decoded QR content: {qr_content}")
                 # Performing OCR
                 texts = OCRVision.perform_ocr(self.client, image_file)
                 text = texts[0].description

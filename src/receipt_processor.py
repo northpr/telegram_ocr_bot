@@ -3,6 +3,7 @@ import re
 from datetime import datetime
 from typing import List, Dict, Tuple, Union
 from utils import Utils
+import requests
 from google.cloud import vision
 
 class OCRVision():
@@ -172,4 +173,19 @@ class VPayExtractor():
         "mistakes": mistakes,
         "current_time": current_time
             }
+    
+    @staticmethod
+    def qr_decode(image_file: bytes) -> Union[str, None]:
+        try:
+            response = requests.post(
+                "https://api.qrserver.com/v1/read-qr-code/",
+                files={"file": ("image.jpg", image_file, "image/jpeg")}
+            )
+            decoded_info = response.json()
+            qr_data = decoded_info[0]["symbol"][0]["data"]
+            if qr_data:
+                return qr_data
+        except Exception as e:
+            print(f"Error decoding QR coed: {e}")
+            return None
 

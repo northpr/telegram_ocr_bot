@@ -3,6 +3,15 @@ import telebot
 class TeleHelper():
     @staticmethod
     def extract_message_info(message):
+        """
+        Receive the message from the Telegram sender and getting information
+
+        Args:
+            message (_type_): Message from the sender
+
+        Returns:
+            _type_: Dict
+        """
         message_info = {
             "chat_id" : message.chat.id,
             "chat_title": message.chat.title,

@@ -8,10 +8,9 @@ from config import *
 import time
 import datetime
 
-#TODO: More error handling
-#TODO: Make async function
 #TODO: Change database for registration and activated_chatid
 #TODO: boto3 for register and activate chatroom
+#TODO: Make async function
 
 class OCRBot:
     def __init__(self, token, google_app_credentials):
@@ -34,6 +33,7 @@ class OCRBot:
     def register_handlers(self):
         """
         Telegram handlers function for different commands and message type
+        Example: if type /start will send to send_welcome function
         """
         self.bot.message_handler(commands=['start'])(self.send_welcome)
         self.bot.message_handler(commands=["register"])(self.handle_register)
@@ -46,12 +46,15 @@ class OCRBot:
     def run(self):
         print("RUNNING")
         try:
-            self.bot.infinity_polling() # If it has some error it will try to restart
+            self.bot.infinity_polling(timeout=10, long_polling_timeout=5)
         except Exception as e:
             print("ERROR, API_ERROR_ACCESS")
             time.sleep(1)
 
     def send_welcome(self, message):
+        """
+        Sending welcome message when start
+        """
         welcome_msg = """ยินดีต้อนรับ เริ่มการใช้ OCR-Bot
 /activate - เริ่มการใช้บอท
 /deactivate - ปิดการใช้บอท
@@ -102,7 +105,7 @@ class OCRBot:
             writer_object.writerow(user_list)
         response_msg = f"[BOT] {staff_id}\nการลงทะเบียนเสร็จสมบูรณ์ คุณสามารถล็อกอินโดยการพิมพ์ /login"
         self.bot.reply_to(message, response_msg)
-        log_msg = f"REGISTER, {staff_id}, {message_info['user_id']}, {message_info['user_username']}, \
+        log_msg = f"REGISTER,{staff_id},{message_info['user_id']},{message_info['user_username']},\
 {message_info['user_firstname']}"
         print(log_msg)
 
@@ -113,10 +116,8 @@ class OCRBot:
         self.ocr_activated_chatid[message.chat.id] = True
         self.bot.reply_to(message, "[Aquar Team] เริ่มการใช้งานค่ะ 🟢")
         # Providing log on which chat the bot is activated
-        user_id = message.from_user.id
-        chat_id = message.chat.id
-        log_msg = f"ACTIVATE, {message_info['user_id']}, {message_info['chat_id']}, \
-{message_info['user_username']}, {message_info['user_firstname']}"
+        log_msg = f"ACTIVATE,{message_info['user_id']},{message_info['chat_id']},{message_info['chat_title']},\
+{message_info['user_username']},{message_info['user_firstname']}"
         print(log_msg)
 
     def handle_deactivate(self, message):
@@ -125,8 +126,8 @@ class OCRBot:
         message_info = TeleHelper.extract_message_info(message)
         self.ocr_activated_chatid[message.chat.id] = False
         self.bot.reply_to(message, "[Aquar Team] ปิดการใช้งานค่ะ 🔴")
-        log_msg = f"DEACTIVATE, {message_info['user_id']}, {message_info['chat_id']}, \
-{message_info['user_username']}, {message_info['user_firstname']}"
+        log_msg = f"DEACTIVATE,{message_info['user_id']},{message_info['chat_id']},{message_info['chat_title']}\
+{message_info['user_username']},{message_info['user_firstname']}"
         print(log_msg)
 
     def handle_status(self, message):
@@ -203,10 +204,10 @@ class OCRBot:
                 result_msg = TeleHelper.response_result_msg(regex_result, mistakes=regex_result['mistakes'] >= 2)
 
                 # Setting up log for Grafana use    
-                log_msg = f"RESULT, {message_info['chat_id']}, {message_info['chat_title']}, \
-{message_info['user_id']}, {message_info['user_username']}, {message_info['user_firstname']}, \
-{regex_result['ref_id']}, {regex_result['trans_id']}, {regex_result['money_amt']}, {regex_result['full_name']}, \
-{regex_result['acc_number']}, {regex_result['bank_name']}"
+                log_msg = f"RESULT,{message_info['chat_id']},\
+{message_info['user_id']},{message_info['user_username']},{message_info['user_firstname']},\
+{regex_result['ref_id']},{regex_result['trans_id']},{regex_result['money_amt']},{regex_result['full_name']},\
+{regex_result['acc_number']},{regex_result['bank_name']}"
                 print(log_msg)
                 # Send the message back to the user
                 self.bot.reply_to(message, result_msg)
@@ -214,8 +215,8 @@ class OCRBot:
                 # Error message
                 error_msg = f"[Aquar Team] โปรดเช็คให้มั่นใจว่าเป็นใบโอนเงิน"
                 self.bot.reply_to(message, error_msg)
-                log_msg = f"OCR_ERROR, {message_info['chat_id']}, {message_info['chat_title']}, \
-{message_info['user_id']}, {message_info['user_username']}, {message_info['user_firstname']},"
+                log_msg = f"OCR_ERROR,{message_info['chat_id']},{message_info['chat_title']},\
+{message_info['user_id']},{message_info['user_username']},{message_info['user_firstname']},"
                 print(log_msg)
 
         else:

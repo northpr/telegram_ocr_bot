@@ -8,6 +8,8 @@ nbs/img_test
 nbs/config.py
 nbs/g_credential.json
 src/g_credential.json
+src/g_credential_development.json
+src/g_credential_personal.json
 src/config.py
 src/test_script.py
 data/
